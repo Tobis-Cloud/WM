@@ -287,10 +287,27 @@ function loadCachedData() {
   return false;
 }
 
+async function fetchWithTimeout(resource, options = {}) {
+  const { timeout = 4000 } = options;
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(resource, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
+}
+
 async function fetchData(url) {
   // 1. Direkt versuchen
   try {
-    const res = await fetch(url);
+    const res = await fetchWithTimeout(url, { timeout: 3500 });
     if (res.ok) return await res.json();
   } catch (e) {
     console.warn(`Direct fetch failed for ${url}, trying proxy...`, e);
@@ -299,7 +316,7 @@ async function fetchData(url) {
   // 2. Allorigins /get Proxy versuchen (stabilerer JSON-Wrapper-Endpunkt)
   try {
     const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
-    const res = await fetch(proxyUrl);
+    const res = await fetchWithTimeout(proxyUrl, { timeout: 4000 });
     if (res.ok) {
       const data = await res.json();
       if (data && data.contents) {
@@ -310,13 +327,22 @@ async function fetchData(url) {
     console.warn(`AllOrigins proxy failed for ${url}`, e);
   }
 
-  // 3. Corsproxy.io als letzte Alternative versuchen
+  // 3. Corsproxy.io als Alternative versuchen
   try {
     const proxyUrl = 'https://corsproxy.io/?url=' + encodeURIComponent(url);
-    const res = await fetch(proxyUrl);
+    const res = await fetchWithTimeout(proxyUrl, { timeout: 4000 });
     if (res.ok) return await res.json();
   } catch (e) {
     console.warn(`Corsproxy.io failed for ${url}`, e);
+  }
+
+  // 4. Allorigins RAW Proxy versuchen
+  try {
+    const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+    const res = await fetchWithTimeout(proxyUrl, { timeout: 4000 });
+    if (res.ok) return await res.json();
+  } catch (e) {
+    console.warn(`AllOrigins RAW failed for ${url}`, e);
   }
   
   throw new Error('Verbindung zur WM-Datenbank fehlgeschlagen (CORS/Netzwerkfehler).');
