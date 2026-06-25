@@ -12,6 +12,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="FIFA WM 2026" />
+  
+  <!-- HTML2Canvas for PNG Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -599,14 +602,155 @@
       .nav-tabs{gap:0.2rem;padding:0.4rem}
       .tab-btn{font-size:0.65rem}
     }
+    
+    /* Hamburger Menu & Mobile Drawer */
+    .hamburger-btn {
+      display: none;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      transition: all 0.25s ease;
+      position: absolute;
+      right: 1.5rem;
+      top: 1.8rem;
+      z-index: 110;
+    }
+    .hamburger-btn:hover {
+      border-color: var(--border-bright);
+      background: var(--bg-card-hover);
+    }
+    .mobile-nav-menu {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 280px;
+      height: 100vh;
+      background: rgba(10, 14, 26, 0.98);
+      backdrop-filter: blur(20px);
+      border-left: 1px solid var(--border);
+      z-index: 1000;
+      padding: 5rem 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    }
+    .mobile-nav-menu.open {
+      right: 0;
+    }
+    .mobile-nav-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.8rem 1.5rem;
+      border-radius: 50px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .mobile-nav-item:hover, .mobile-nav-item.active {
+      border-color: var(--accent-blue);
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    }
+    .mobile-nav-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+      display: none;
+      animation: fadeIn 0.2s ease;
+    }
+    .mobile-nav-overlay.open {
+      display: block;
+    }
+    .mobile-menu-close {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mobile-menu-close:hover {
+      background: var(--accent-red-dim);
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+    }
+    
+    /* Export Button Styling */
+    .export-btn {
+      background: var(--accent-blue-dim);
+      border: 1px solid rgba(59,130,246,0.3);
+      color: var(--accent-blue);
+      padding: 0.4rem 0.9rem;
+      border-radius: 50px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .export-btn:hover {
+      background: var(--accent-blue);
+      color: #fff;
+    }
+    
+    @media(max-width:768px){
+      .hamburger-btn {
+        display: flex;
+      }
+      .nav-tabs {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 <body>
 
 <header>
+  <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMobileMenu()">&#9776;</button>
   <h1 class="header-title">&#9917; FIFA WM 2026</h1>
   <p class="header-subtitle">USA &middot; Kanada &middot; Mexiko &mdash; Live-Turnierplan</p>
 </header>
+
+<!-- Mobile Navigation Drawer -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="toggleMobileMenu()"></div>
+<div class="mobile-nav-menu" id="mobileNavMenu">
+  <button class="mobile-menu-close" onclick="toggleMobileMenu()">&#x2715;</button>
+  <p style="font-size:1.1rem;font-weight:800;margin-bottom:1.5rem;background:linear-gradient(135deg,var(--accent-gold),var(--accent-blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Navigation</p>
+  <button class="mobile-nav-item active" data-tab="groups" onclick="selectMobileTab('groups')"><span>&#127903; Gruppen</span></button>
+  <button class="mobile-nav-item" data-tab="bracket" onclick="selectMobileTab('bracket')"><span>&#127942; KO-Runden</span></button>
+  <button class="mobile-nav-item" data-tab="matches" onclick="selectMobileTab('matches')"><span>&#128197; Alle Spiele</span></button>
+  <button class="mobile-nav-item" data-tab="teams" onclick="selectMobileTab('teams')"><span>&#127937; Teams</span></button>
+</div>
 
 <nav class="nav-tabs">
   <button class="tab-btn active" data-tab="groups" id="tabGroups"><span>&#127903; Gruppen</span></button>
@@ -624,7 +768,10 @@
     <div id="groupsContainer"><div class="loading-screen"><div class="spinner"></div><p class="loading-text">Lade Gruppenphase&hellip;</p></div></div>
   </div>
   <div class="view" id="viewBracket">
-    <div class="status-bar"><div class="status-live"><span class="live-dot"></span><span>KO-Bracket &middot; Basierend auf aktuellen Ergebnissen</span></div></div>
+    <div class="status-bar">
+      <div class="status-live"><span class="live-dot"></span><span>KO-Bracket &middot; Basierend auf aktuellen Ergebnissen</span></div>
+      <button class="export-btn" onclick="exportBracketToPng()">📷 Spielbaum als PNG</button>
+    </div>
     <div id="bracketContainer"><div class="loading-screen"><div class="spinner"></div><p class="loading-text">Lade Bracket&hellip;</p></div></div>
   </div>
   <div class="view" id="viewMatches">
@@ -643,7 +790,37 @@
 const API = 'https://worldcup26.ir/get';
 let S = { teams:{}, groups:[], games:[], loaded:false };
 let thirdAssignments = {};
-const DE = {'Mexico':'Mexiko','South Africa':'S\u00fcdafrika','South Korea':'S\u00fcdkorea','Czech Republic':'Tschechien','Canada':'Kanada','Bosnia and Herzegovina':'Bosnien-H.','Qatar':'Katar','Switzerland':'Schweiz','Brazil':'Brasilien','Morocco':'Marokko','Haiti':'Haiti','Scotland':'Schottland','United States':'USA','Paraguay':'Paraguay','Australia':'Australien','Turkey':'T\u00fcrkei','Germany':'Deutschland','Cura\u00e7ao':'Cura\u00e7ao','Ivory Coast':'Elfenbeink\u00fcste','Ecuador':'Ecuador','Netherlands':'Niederlande','Japan':'Japan','Sweden':'Schweden','Tunisia':'Tunesien','Belgium':'Belgien','Egypt':'\u00c4gypten','Iran':'Iran','New Zealand':'Neuseeland','Spain':'Spanien','Cape Verde':'Kap Verde','Saudi Arabia':'Saudi-Arabien','Uruguay':'Uruguay','France':'Frankreich','Senegal':'Senegal','Iraq':'Irak','Norway':'Norwegen','Argentina':'Argentinien','Algeria':'Algerien','Austria':'\u00d6sterreich','Jordan':'Jordanien','Portugal':'Portugal','Democratic Republic of the Congo':'DR Kongo','Uzbekistan':'Usbekistan','Colombia':'Kolumbien','England':'England','Croatia':'Kroatien','Ghana':'Ghana','Panama':'Panama'};
+let showOldGames = false;
+let updateIntervalId = null;
+
+function isOlderThanThreeDays(localDateStr) {
+  if (!localDateStr) return false;
+  const matchDate = new Date(localDateStr);
+  if (isNaN(matchDate.getTime())) return false;
+  const now = new Date();
+  const diffTime = now.getTime() - matchDate.getTime();
+  const diffDays = diffTime / (1000 * 60 * 60 * 24);
+  return diffDays > 3;
+}
+
+function toggleOldGames() {
+  showOldGames = !showOldGames;
+  renderMatches();
+}
+
+function startAutoUpdate() {
+  if (updateIntervalId) {
+    clearInterval(updateIntervalId);
+  }
+  if (!S.loaded || !S.games) return;
+  const hasLiveGame = S.games.some(g => g.time_elapsed && g.time_elapsed !== 'notstarted' && g.time_elapsed !== 'finished');
+  const intervalTime = hasLiveGame ? 30000 : 60000;
+  updateIntervalId = setInterval(async () => {
+    await loadAllData();
+  }, intervalTime);
+}
+
+const DE = {'Mexico':'Mexiko','South Africa':'S\u00fcdafrika','South Korea':'S\u00fcdkorea','Czech Republic':'Tschechien','Canada':'Kanada','Bosnia and Herzegovina':'Bosnien-H.','Qatar':'Katar','Switzerland':'Schweiz','Brazil':'Brasilien','Morocco':'Marokko','Haiti':'Haiti','Scotland':'Schottland','United States':'USA','Paraguay':'Paraguay','Australia':'Australien','Turkey':'T\u00fcrkei','Germany':'Deutschland','Cura\u00e7ao':'Cura\u00e7ao','Ivory Coast':'Elfenbeink\u00fcste','Ecuador':'Ecuador','Netherlands':'Niederlande','Japan':'Japan','Sweden':'Schweden','Tunisia':'Tunesien','Belgium':'Belgien','Egypt':'\u00c4gypten','Iran':'Iran','New Zealand':'Neuseeland','Spain':'Spanien','Cape Verde':'Kap Verde','Saudi Arabia':'Saudi-Arabien','Uruguay':'Uruguay','France':'Frankreich','Senegal':'Senegal','Iraq':'Irak','Norway':'Norwegen','Argentina':'Argentinien','Algeria':'Algerien','Austria':'\u00d6sterreich','Jordan':'Jordanien','Portugal':'Portugal','Democratic Republic of the Congo':'DR Kongo','Uzbekistan':'Uzbekistan','Colombia':'Kolumbien','England':'England','Croatia':'Kroatien','Ghana':'Ghana','Panama':'Panama'};
 const tn = n => DE[n] || n;
 
 const GERMANY_BROADCASTERS = {
@@ -984,19 +1161,143 @@ function calculatePlayerGoals() {
   return goalsMap;
 }
 
-document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => {
-  document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+function switchTab(t) {
+  document.querySelectorAll('.tab-btn').forEach(x => {
+    x.classList.remove('active');
+    if (x.dataset.tab === t) x.classList.add('active');
+  });
+  
+  document.querySelectorAll('.mobile-nav-item').forEach(x => {
+    x.classList.remove('active');
+    if (x.dataset.tab === t) x.classList.add('active');
+  });
+  
   document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
-  b.classList.add('active');
-  const t = b.dataset.tab;
-  document.getElementById('view'+t[0].toUpperCase()+t.slice(1)).classList.add('active');
+  const viewEl = document.getElementById('view' + t[0].toUpperCase() + t.slice(1));
+  if (viewEl) viewEl.classList.add('active');
+  
   if (t === 'bracket') {
     setTimeout(drawBracketLines, 100);
   }
   if (t === 'matches') {
     setTimeout(scrollToCurrentDay, 100);
   }
+}
+
+document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => {
+  switchTab(b.dataset.tab);
 }));
+
+function toggleMobileMenu() {
+  const menu = document.getElementById('mobileNavMenu');
+  const overlay = document.getElementById('mobileNavOverlay');
+  if (menu && overlay) {
+    menu.classList.toggle('open');
+    overlay.classList.toggle('open');
+  }
+}
+
+function selectMobileTab(tabName) {
+  switchTab(tabName);
+  toggleMobileMenu();
+}
+
+// Swipe support for mobile navigation (open: swipe left from right edge; close: swipe right)
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+
+document.addEventListener('touchstart', (e) => {
+  touchStartX = e.changedTouches[0].screenX;
+  touchStartY = e.changedTouches[0].screenY;
+}, { passive: true });
+
+document.addEventListener('touchend', (e) => {
+  touchEndX = e.changedTouches[0].screenX;
+  touchEndY = e.changedTouches[0].screenY;
+  handleSwipe();
+}, { passive: true });
+
+function handleSwipe() {
+  const diffX = touchEndX - touchStartX;
+  const diffY = touchEndY - touchStartY;
+  
+  if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 60) {
+    const menu = document.getElementById('mobileNavMenu');
+    if (!menu) return;
+    const isOpen = menu.classList.contains('open');
+    
+    if (diffX < 0) {
+      const screenWidth = window.innerWidth;
+      const startFromRightEdge = (screenWidth - touchStartX) < (screenWidth * 0.20);
+      if (!isOpen && startFromRightEdge) {
+        toggleMobileMenu();
+      }
+    } else {
+      if (isOpen) {
+        toggleMobileMenu();
+      }
+    }
+  }
+}
+
+async function exportBracketToPng() {
+  const container = document.getElementById('bracketContainer');
+  const btn = document.querySelector('.export-btn');
+  if (!container) return;
+  
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '⏳ Generiere...';
+  btn.disabled = true;
+  
+  try {
+    if (typeof html2canvas === 'undefined') {
+      throw new Error("Export-Bibliothek wird noch geladen. Bitte kurz warten und erneut versuchen.");
+    }
+    
+    const scrollWidth = container.scrollWidth;
+    const scrollHeight = container.scrollHeight;
+    
+    const originalWidth = container.style.width;
+    const originalMax = container.style.maxWidth;
+    const originalOverflow = container.style.overflowX;
+    
+    container.style.width = scrollWidth + 'px';
+    container.style.maxWidth = 'none';
+    container.style.overflowX = 'visible';
+    
+    const canvas = await html2canvas(container, {
+      backgroundColor: '#0a0e1a',
+      logging: false,
+      useCORS: true,
+      scale: 2,
+      width: scrollWidth,
+      height: scrollHeight,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: scrollWidth,
+      windowHeight: scrollHeight
+    });
+    
+    container.style.width = originalWidth;
+    container.style.maxWidth = originalMax;
+    container.style.overflowX = originalOverflow;
+    
+    const dataUrl = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = 'wm2026-spielbaum.png';
+    link.href = dataUrl;
+    link.click();
+    
+  } catch (e) {
+    alert("Export fehlgeschlagen: " + e.message);
+    console.error(e);
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+}
 
 async function fetchData(url) {
   const timeout = 3000;
@@ -1039,6 +1340,7 @@ async function loadAllData() {
     const el = document.getElementById('lastUpdate');
     if(el) el.textContent = 'Zuletzt: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
     renderGroups(); renderBracket(); renderMatches(); renderTeams();
+    startAutoUpdate();
   } catch(e) {
     console.error(e);
     ['groupsContainer','bracketContainer','matchesContainer','teamsContainer'].forEach(id => {
@@ -1697,20 +1999,54 @@ function renderBracketMatch(game, gw, gr, inlineStyle = '', isThird = false) {
 function renderMatches() {
   const c = document.getElementById('matchesContainer');
   if(!c||!S.loaded) return;
+  
   const groupGames = S.games.filter(g=>g.type==='group').sort((a,b)=>pd(a.local_date)-pd(b.local_date));
+  const oldGamesCount = groupGames.filter(g => isOlderThanThreeDays(g.local_date)).length;
+  
+  let html = '';
+  
+  if (oldGamesCount > 0) {
+    html += '<div class="old-games-banner" style="display:flex;flex-direction:column;align-items:center;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.5rem;text-align:center;gap:0.75rem;">'
+      + '<p style="font-size:0.9rem;color:var(--text-secondary);font-weight:500;">⚽ ' + oldGamesCount + ' vergangene Gruppenphase-Spiele wurden ausgeblendet.</p>'
+      + '<button class="tab-btn" onclick="toggleOldGames()" style="max-width:240px;background:var(--accent-blue-dim);border-color:rgba(59,130,246,0.3);color:var(--accent-blue);font-weight:700;">'
+        + '<span>' + (showOldGames ? 'Alte Spiele ausblenden' : 'Alte Spiele anzeigen') + '</span>'
+      + '</button>'
+      + '</div>';
+  }
+  
+  html += '<div class="section-header"><span class="section-title">Gruppenphase</span><span class="section-count">'+groupGames.length+' Spiele</span></div>';
+  
   const byDate = {};
-  groupGames.forEach(g => { const d=(g.local_date||'').split(' ')[0]; if(!byDate[d])byDate[d]=[]; byDate[d].push(g); });
-  let html = '<div class="section-header"><span class="section-title">Gruppenphase</span><span class="section-count">'+groupGames.length+' Spiele</span></div>';
+  groupGames.forEach(g => {
+    const isOld = isOlderThanThreeDays(g.local_date);
+    if (isOld && !showOldGames) return;
+    
+    const d=(g.local_date||'').split(' ')[0];
+    if(!byDate[d]) byDate[d]=[];
+    byDate[d].push(g);
+  });
+  
   Object.keys(byDate).sort().forEach(date => {
     const gs = byDate[date];
     html += '<div class="matchday-section" data-date="'+date+'"><div class="matchday-header"><span class="matchday-title">'+fdf(date)+'</span><span class="matchday-date">'+gs.length+' Spiele</span></div>'+gs.map(g=>renderMatchCard(g)).join('')+'</div>';
   });
+  
   const koTypes = [['r32','16tel-Finale'],['r16','Achtelfinale'],['qf','Viertelfinale'],['sf','Halbfinale'],['third','Spiel um Platz 3'],['final','&#127942; Finale']];
   koTypes.forEach(([type,label]) => {
     const gs = S.games.filter(g=>g.type===type).sort((a,b)=>parseInt(a.id)-parseInt(b.id));
     if(!gs.length) return;
-    html += '<div class="section-header" style="margin-top:2rem"><span class="section-title">'+label+'</span><span class="section-count">'+gs.length+' Spiele</span></div>'+gs.map(g=>renderMatchCard(g)).join('');
+    
+    const displayedKo = gs.filter(g => {
+      if (showOldGames) return true;
+      return !isOlderThanThreeDays(g.local_date);
+    });
+    
+    const renderList = showOldGames ? gs : displayedKo;
+    if (renderList.length > 0) {
+      html += '<div class="section-header" style="margin-top:2rem"><span class="section-title">'+label+'</span><span class="section-count">'+renderList.length+' Spiele</span></div>'+renderList.map(g=>renderMatchCard(g)).join('');
+    }
   });
+  
   c.innerHTML = html;
 }
 
