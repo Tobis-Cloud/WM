@@ -209,13 +209,8 @@
 <body>
 
 <header>
-  <div class="header-badge"><span class="dot"></span>Live-Daten &middot; worldcup26.ir API</div>
   <h1 class="header-title">&#9917; FIFA WM 2026</h1>
-  <p class="header-subtitle">USA &middot; Kanada &middot; Mexiko &mdash; Offizieller Live-Turnierplan</p>
-  <div class="header-meta">
-    <span class="meta-item">&#128339; Automatische Daten beim Laden</span>
-    <span class="meta-item">&#127918; 48 Teams &middot; 12 Gruppen &middot; 104 Spiele</span>
-  </div>
+  <p class="header-subtitle">USA &middot; Kanada &middot; Mexiko &mdash; Live-Turnierplan</p>
 </header>
 
 <nav class="nav-tabs">
@@ -258,12 +253,32 @@ document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', (
   document.getElementById('view'+t[0].toUpperCase()+t.slice(1)).classList.add('active');
 }));
 
+async function fetchData(url) {
+  const proxies = [
+    u => u,
+    u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+    u => 'https://corsproxy.io/?url=' + encodeURIComponent(u)
+  ];
+  for (const proxy of proxies) {
+    try {
+      const res = await fetch(proxy(url));
+      if (res.ok) return await res.json();
+    } catch (e) {
+      console.warn(`Fetch failed for proxy: ${proxy(url)}`, e);
+    }
+  }
+  throw new Error('Verbindung zur WM-Datenbank fehlgeschlagen (CORS/Netzwerkfehler).');
+}
+
 async function loadAllData() {
   const rb = document.getElementById('refreshBtn');
   if(rb) rb.disabled = true;
   try {
-    const [tr,gr,mr] = await Promise.all([fetch(API+'/teams'),fetch(API+'/groups'),fetch(API+'/games')]);
-    const td = await tr.json(), gd = await gr.json(), md = await mr.json();
+    const [td, gd, md] = await Promise.all([
+      fetchData(API+'/teams'),
+      fetchData(API+'/groups'),
+      fetchData(API+'/games')
+    ]);
     S.teams = {};
     (td.teams||[]).forEach(t => S.teams[t.id] = t);
     S.groups = gd.groups || [];
