@@ -2286,37 +2286,34 @@ function renderTeamStatusCard(team, status) {
 }
 
 function scrollToCurrentDay() {
-  const sections = document.querySelectorAll('.matchday-section');
-  if (!sections.length) return;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const container = document.getElementById('matchesContainer');
+  if (!container) return;
   
-  let targetSection = null;
-  let minDiff = Infinity;
+  // 1. First preference: Live match
+  let target = container.querySelector('.match-live');
   
-  sections.forEach(sec => {
-    const dateStr = sec.dataset.date;
-    if (!dateStr) return;
-    const [m, d, y] = dateStr.split('/');
-    const secDate = new Date(y, m - 1, d);
-    secDate.setHours(0, 0, 0, 0);
-    
-    const diff = secDate - today;
-    if (diff === 0) {
-      targetSection = sec;
-      minDiff = 0;
-    } else if (diff > 0 && diff < minDiff) {
-      targetSection = sec;
-      minDiff = diff;
-    }
-  });
-  
-  if (!targetSection) {
-    targetSection = sections[sections.length - 1];
+  // 2. Second preference: First upcoming match
+  if (!target) {
+    target = container.querySelector('.match-upcoming');
   }
   
-  if (targetSection) {
-    targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // 3. Fallback: Last match card if everything is finished
+  if (!target) {
+    const cards = container.querySelectorAll('.match-card');
+    if (cards.length > 0) {
+      target = cards[cards.length - 1];
+    }
+  }
+  
+  if (target) {
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // Highlight effect
+    target.style.transition = 'outline 0.3s ease';
+    target.style.outline = '2px solid var(--accent-gold)';
+    setTimeout(() => {
+      target.style.outline = '2px solid transparent';
+    }, 1500);
   }
 }
 
