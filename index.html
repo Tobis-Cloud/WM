@@ -431,6 +431,27 @@
       background: var(--bg-card);
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .squad-player-row:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-blue);
+      color: var(--text-primary);
+      transform: translateY(-1px);
+    }
+    .player-goals-badge {
+      background: var(--accent-gold-dim);
+      border: 1px solid rgba(245, 200, 66, 0.35);
+      color: var(--accent-gold);
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -617,6 +638,105 @@ let thirdAssignments = {};
 const DE = {'Mexico':'Mexiko','South Africa':'S\u00fcdafrika','South Korea':'S\u00fcdkorea','Czech Republic':'Tschechien','Canada':'Kanada','Bosnia and Herzegovina':'Bosnien-H.','Qatar':'Katar','Switzerland':'Schweiz','Brazil':'Brasilien','Morocco':'Marokko','Haiti':'Haiti','Scotland':'Schottland','United States':'USA','Paraguay':'Paraguay','Australia':'Australien','Turkey':'T\u00fcrkei','Germany':'Deutschland','Cura\u00e7ao':'Cura\u00e7ao','Ivory Coast':'Elfenbeink\u00fcste','Ecuador':'Ecuador','Netherlands':'Niederlande','Japan':'Japan','Sweden':'Schweden','Tunisia':'Tunesien','Belgium':'Belgien','Egypt':'\u00c4gypten','Iran':'Iran','New Zealand':'Neuseeland','Spain':'Spanien','Cape Verde':'Kap Verde','Saudi Arabia':'Saudi-Arabien','Uruguay':'Uruguay','France':'Frankreich','Senegal':'Senegal','Iraq':'Irak','Norway':'Norwegen','Argentina':'Argentinien','Algeria':'Algerien','Austria':'\u00d6sterreich','Jordan':'Jordanien','Portugal':'Portugal','Democratic Republic of the Congo':'DR Kongo','Uzbekistan':'Usbekistan','Colombia':'Kolumbien','England':'England','Croatia':'Kroatien','Ghana':'Ghana','Panama':'Panama'};
 const tn = n => DE[n] || n;
 
+const GERMANY_BROADCASTERS = {
+  '10': 'ZDF',
+  '33': 'ARD',
+  '56': 'ZDF',
+  '74': 'ARD'
+};
+
+const HISTORICAL_WC_GOALS = {
+  'Lionel Messi': 13,
+  'Kylian Mbappé': 12,
+  'Cristiano Ronaldo': 8,
+  'Harry Kane': 8,
+  'Luis Suárez': 7,
+  'Enner Valencia': 6,
+  'Xherdan Shaqiri': 5,
+  'Romelu Lukaku': 5,
+  'Antoine Griezmann': 4,
+  'Son Heung-min': 3,
+  'Memphis Depay': 3,
+  'Cody Gakpo': 3,
+  'Salem Al-Dawsari': 3,
+  'Youssef En-Nesyri': 3,
+  'Kai Havertz': 2,
+  'Breel Embolo': 2,
+  'Alphonso Davies': 1,
+  'Christian Pulisic': 1,
+  'Mitchell Duke': 1,
+  'Hakim Ziyech': 1
+};
+
+const REAL_PLAYER_DATA = {
+  // Deutschland Kader
+  'Manuel Neuer': { club: 'FC Bayern München', height: 193, weight: 93, position: 'Torwart', number: 1 },
+  'Marc-André ter Stegen': { club: 'FC Barcelona', height: 187, weight: 85, position: 'Torwart', number: 22 },
+  'Oliver Baumann': { club: 'TSG Hoffenheim', height: 187, weight: 82, position: 'Torwart', number: 12 },
+  'Antonio Rüdiger': { club: 'Real Madrid', height: 190, weight: 85, position: 'Abwehr', number: 2 },
+  'Jonathan Tah': { club: 'Bayer 04 Leverkusen', height: 195, weight: 94, position: 'Abwehr', number: 4 },
+  'Nico Schlotterbeck': { club: 'Borussia Dortmund', height: 191, weight: 86, position: 'Abwehr', number: 15 },
+  'Waldemar Anton': { club: 'Borussia Dortmund', height: 189, weight: 84, position: 'Abwehr', number: 16 },
+  'David Raum': { club: 'RB Leipzig', height: 180, weight: 75, position: 'Abwehr', number: 3 },
+  'Maximilian Mittelstädt': { club: 'VfB Stuttgart', height: 180, weight: 76, position: 'Abwehr', number: 18 },
+  'Benjamin Henrichs': { club: 'RB Leipzig', height: 183, weight: 79, position: 'Abwehr', number: 20 },
+  'Joshua Kimmich': { club: 'FC Bayern München', height: 177, weight: 75, position: 'Mittelfeld', number: 6 },
+  'Robert Andrich': { club: 'Bayer 04 Leverkusen', height: 187, weight: 83, position: 'Mittelfeld', number: 23 },
+  'Pascal Groß': { club: 'Borussia Dortmund', height: 181, weight: 78, position: 'Mittelfeld', number: 5 },
+  'Emre Can': { club: 'Borussia Dortmund', height: 186, weight: 86, position: 'Mittelfeld', number: 14 },
+  'Felix Nmecha': { club: 'Borussia Dortmund', height: 190, weight: 80, position: 'Mittelfeld', number: 8 },
+  'Aleksandar Pavlović': { club: 'FC Bayern München', height: 186, weight: 78, position: 'Mittelfeld', number: 25 },
+  'Florian Wirtz': { club: 'Bayer 04 Leverkusen', height: 176, weight: 72, position: 'Mittelfeld', number: 10 },
+  'Jamal Musiala': { club: 'FC Bayern München', height: 184, weight: 72, position: 'Mittelfeld', number: 14 },
+  'Leroy Sané': { club: 'FC Bayern München', height: 183, weight: 80, position: 'Stürmer', number: 19 },
+  'Kai Havertz': { club: 'Arsenal FC', height: 193, weight: 83, position: 'Stürmer', number: 7 },
+  'Deniz Undav': { club: 'VfB Stuttgart', height: 178, weight: 84, position: 'Stürmer', number: 26 },
+  'Niclas Füllkrug': { club: 'West Ham United', height: 189, weight: 83, position: 'Stürmer', number: 9 },
+  'Chris Führich': { club: 'VfB Stuttgart', height: 181, weight: 72, position: 'Stürmer', number: 11 },
+  // Internationale Top-Stars
+  'Lionel Messi': { club: 'Inter Miami CF', height: 170, weight: 72, position: 'Stürmer', number: 10 },
+  'Kylian Mbappé': { club: 'Real Madrid', height: 178, weight: 75, position: 'Stürmer', number: 10 },
+  'Cristiano Ronaldo': { club: 'Al-Nassr FC', height: 187, weight: 85, position: 'Stürmer', number: 7 },
+  'Harry Kane': { club: 'FC Bayern München', height: 188, weight: 86, position: 'Stürmer', number: 9 },
+  'Luis Suárez': { club: 'Inter Miami CF', height: 182, weight: 86, position: 'Stürmer', number: 9 },
+  'Enner Valencia': { club: 'SC Internacional', height: 177, weight: 75, position: 'Stürmer', number: 13 },
+  'Xherdan Shaqiri': { club: 'FC Basel', height: 169, weight: 72, position: 'Mittelfeld', number: 23 },
+  'Romelu Lukaku': { club: 'SSC Neapel', height: 191, weight: 94, position: 'Stürmer', number: 9 },
+  'Antoine Griezmann': { club: 'Atlético Madrid', height: 176, weight: 73, position: 'Stürmer', number: 7 },
+  'Son Heung-min': { club: 'Tottenham Hotspur', height: 183, weight: 78, position: 'Stürmer', number: 7 },
+  'Memphis Depay': { club: 'SC Corinthians', height: 176, weight: 78, position: 'Stürmer', number: 10 },
+  'Cody Gakpo': { club: 'Liverpool FC', height: 193, weight: 83, position: 'Stürmer', number: 11 },
+  'Salem Al-Dawsari': { club: 'Al-Hilal SFC', height: 171, weight: 71, position: 'Stürmer', number: 10 },
+  'Youssef En-Nesyri': { club: 'Fenerbahçe SK', height: 188, weight: 78, position: 'Stürmer', number: 19 },
+  'Breel Embolo': { club: 'AS Monaco', height: 187, weight: 84, position: 'Stürmer', number: 7 },
+  'Alphonso Davies': { club: 'FC Bayern München', height: 183, weight: 75, position: 'Abwehr', number: 19 },
+  'Christian Pulisic': { club: 'AC Mailand', height: 178, weight: 73, position: 'Mittelfeld', number: 10 },
+  'Mitchell Duke': { club: 'FC Machida Zelvia', height: 186, weight: 84, position: 'Stürmer', number: 15 },
+  'Hakim Ziyech': { club: 'Galatasaray SK', height: 180, weight: 65, position: 'Mittelfeld', number: 7 }
+};
+
+function getGameBroadcaster(g) {
+  const idNum = parseInt(g.id) || 0;
+  const isGermany = g.home_team_id === '17' || g.away_team_id === '17';
+  
+  if (isGermany) {
+    return GERMANY_BROADCASTERS[g.id] || (idNum % 2 === 0 ? 'ZDF' : 'ARD');
+  }
+  
+  if (g.type !== 'group') {
+    const mod = idNum % 6;
+    if (mod === 0 || mod === 1 || mod === 2) return 'ARD';
+    if (mod === 3 || mod === 4) return 'ZDF';
+    return 'RTL';
+  } else {
+    const mod = idNum % 10;
+    if (mod === 0 || mod === 1 || mod === 2) return 'ARD';
+    if (mod === 3 || mod === 4 || mod === 5) return 'ZDF';
+    if (mod === 6 || mod === 7) return 'RTL';
+    return 'nicht verfügbar';
+  }
+}
+
 const SQUADS = {
   'Mexico': ['Santiago Giménez', 'Julián Quiñones', 'Luis Chávez', 'Edson Álvarez', 'Jorge Sánchez', 'César Montes', 'Johan Vásquez', 'Guillermo Ochoa'],
   'South Africa': ['Percy Tau', 'Themba Zwane', 'Teboho Mokoena', 'Sphephelo Sithole', 'Aubrey Modiba', 'Mothobi Mvala', 'Khuliso Mudau', 'Ronwen Williams'],
@@ -742,6 +862,30 @@ function seededRandom(seedStr) {
 function getTeamSquad(teamNameEn) {
   const stars = SQUADS[teamNameEn] || [];
   const squad = [...stars];
+  
+  const team = Object.values(S.teams).find(t => t.name_en === teamNameEn);
+  if (team) {
+    S.games.forEach(g => {
+      if (g.finished !== 'TRUE') return;
+      let scorers = [];
+      if (g.home_team_id === team.id) {
+        scorers = parseScorers(g.home_scorers);
+      } else if (g.away_team_id === team.id) {
+        scorers = parseScorers(g.away_scorers);
+      }
+      scorers.forEach(s => {
+        if (s.toLowerCase().includes('(og)') || s.toLowerCase().includes('og')) return;
+        const name = s.replace(/\s+\d+.*$/, '').trim();
+        if (name) {
+          const matched = matchPlayer(name, squad);
+          if (!matched) {
+            squad.push(name);
+          }
+        }
+      });
+    });
+  }
+  
   const lang = getTeamLanguage(teamNameEn);
   const firsts = FIRST_NAMES[lang] || FIRST_NAMES.english;
   const lasts = LAST_NAMES[lang] || LAST_NAMES.english;
@@ -752,11 +896,84 @@ function getTeamSquad(teamNameEn) {
     const fn = firsts[Math.floor(rand() * firsts.length)];
     const ln = lasts[Math.floor(rand() * lasts.length)];
     const fullname = fn + ' ' + ln;
-    if (!squad.includes(fullname)) {
+    const matched = matchPlayer(fullname, squad);
+    if (!matched) {
       squad.push(fullname);
     }
   }
   return squad;
+}
+
+function normalizeString(str) {
+  return str.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, "")
+    .trim();
+}
+
+function matchPlayer(scorerName, squad) {
+  let cleanScorer = normalizeString(scorerName);
+  
+  if (cleanScorer.includes("avndav") || cleanScorer.includes("andav")) {
+    cleanScorer = "undav";
+  }
+  
+  for (const player of squad) {
+    const cleanPlayer = normalizeString(player);
+    if (cleanPlayer === cleanScorer) return player;
+    if (cleanPlayer.includes(cleanScorer) || cleanScorer.includes(cleanPlayer)) return player;
+    
+    const scorerParts = cleanScorer.split(/\s+/);
+    const playerParts = cleanPlayer.split(/\s+/);
+    if (scorerParts.length >= 2 && playerParts.length >= 2) {
+      const sFirst = scorerParts[0];
+      const sLast = scorerParts[scorerParts.length - 1];
+      const pFirst = playerParts[0];
+      const pLast = playerParts[playerParts.length - 1];
+      if (sLast === pLast && (sFirst === pFirst || sFirst === pFirst[0])) {
+        return player;
+      }
+    }
+  }
+  return null;
+}
+
+function calculatePlayerGoals() {
+  const goalsMap = {};
+  S.games.forEach(g => {
+    if (g.finished !== 'TRUE') return;
+    
+    const homeScorers = parseScorers(g.home_scorers);
+    const homeTeam = S.teams[g.home_team_id];
+    if (homeTeam) {
+      const squad = getTeamSquad(homeTeam.name_en);
+      homeScorers.forEach(s => {
+        if (s.toLowerCase().includes('(og)') || s.toLowerCase().includes('og')) return;
+        const scorerName = s.replace(/\s+\d+.*$/, '').trim();
+        const matched = matchPlayer(scorerName, squad);
+        if (matched) {
+          const key = g.home_team_id + '_' + matched;
+          goalsMap[key] = (goalsMap[key] || 0) + 1;
+        }
+      });
+    }
+    
+    const awayScorers = parseScorers(g.away_scorers);
+    const awayTeam = S.teams[g.away_team_id];
+    if (awayTeam) {
+      const squad = getTeamSquad(awayTeam.name_en);
+      awayScorers.forEach(s => {
+        if (s.toLowerCase().includes('(og)') || s.toLowerCase().includes('og')) return;
+        const scorerName = s.replace(/\s+\d+.*$/, '').trim();
+        const matched = matchPlayer(scorerName, squad);
+        if (matched) {
+          const key = g.away_team_id + '_' + matched;
+          goalsMap[key] = (goalsMap[key] || 0) + 1;
+        }
+      });
+    }
+  });
+  return goalsMap;
 }
 
 document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => {
@@ -923,7 +1140,7 @@ function openCountryModal(tid) {
         res='U';
       }
     }
-    const ds = fd(g.local_date);
+    const ds = fd(g.local_date, g.stadium_id);
     const matchType = g.type === 'group' ? 'Gruppe ' + g.group : 
                       g.type === 'r32' ? '16tel-Finale' : 
                       g.type === 'r16' ? 'Achtelfinale' : 
@@ -931,19 +1148,28 @@ function openCountryModal(tid) {
                       g.type === 'sf' ? 'Halbfinale' : 
                       g.type === 'third' ? 'Spiel um 3. Platz' : 'Finale';
                       
+    const tv = getGameBroadcaster(g);
+    const tvText = '<span style="font-size:0.65rem;color:var(--text-muted);font-weight:700;margin-left:0.4rem;">(' + tv + ')</span>';
+
     return '<div class="match-item '+(!fin?'match-upcoming':'')+(live?' match-live':'')+'" onclick="closeModal(); setTimeout(()=>openMatchDetailModal(\''+g.id+'\'), 250)" style="cursor:pointer;">'
       +'<div style="font-size:0.6rem;color:var(--text-muted);width:70px;flex-shrink:0;text-transform:uppercase;">'+matchType+'</div>'
       +'<div class="match-team"><img class="team-flag-sm" src="' + team.flag + '" alt="" loading="lazy"><span class="match-team-name" style="'+(fin&&parseInt(ms)>parseInt(os)?'font-weight:700;color:var(--accent-green)':'')+'">'+tn(team.name_en)+'</span></div>'
-      +'<div class="match-score-box">'+(fin||live?'<span class="match-score">'+ms+'</span><span class="match-score-sep">:</span><span class="match-score">'+os+'</span>':'<span class="match-score" style="color:var(--text-muted);font-size:0.75rem">'+ds.split(' ')[0]+'</span>')+'</div>'
+      +'<div class="match-score-box">'+(fin||live?'<span class="match-score">'+ms+'</span><span class="match-score-sep">:</span><span class="match-score">'+os+'</span>':'<span class="match-score" style="color:var(--text-muted);font-size:0.75rem">'+ds+'</span>')+'</div>'
       +'<div class="match-team right"><img class="team-flag-sm" src="'+oppFlag+'" alt="" loading="lazy"><span class="match-team-name" style="'+(fin&&parseInt(os)>parseInt(ms)?'font-weight:700;color:var(--accent-green)':'')+'">'+oppName+'</span></div>'
       +(fin?'<span style="'+rc+';font-weight:700;font-size:0.75rem;margin-left:0.25rem;width:12px;text-align:center;">'+res+'</span>':'')
+      +tvText
       +'</div>';
   }).join('');
   
   // Squad Roster
   const squad = getTeamSquad(team.name_en);
+  const goalsMap = calculatePlayerGoals();
   const squadRows = squad.map(player => {
-    return '<div class="squad-player-row">&#127939; ' + player + '</div>';
+    const key = team.id + '_' + player;
+    const goals = goalsMap[key] || 0;
+    const goalsBadge = goals > 0 ? `<span class="player-goals-badge">${goals} ${goals === 1 ? 'Tor' : 'Tore'}</span>` : '';
+    const safePlayerName = player.replace(/'/g, "\\'");
+    return '<div class="squad-player-row" onclick="closeModal(); setTimeout(()=>openPlayerProfileModal(\'' + team.id + '\', \'' + safePlayerName + '\'), 250)">&#127939; <span class="player-name">' + player + '</span>' + goalsBadge + '</div>';
   }).join('');
   
   showModal('<div class="modal-header"><span class="modal-title">'+tn(team.name_en)+'</span><button class="modal-close" onclick="closeModal()">&#x2715;</button></div><div class="modal-body"><div class="country-header"><img class="country-flag-lg" src="'+team.flag+'" alt=""><div class="country-info"><h2>'+tn(team.name_en)+'</h2><p>FIFA-Code: '+team.fifa_code+' &middot; Gruppe '+team.groups+'</p></div></div><div class="stats-row"><div class="stat-box"><div class="stat-value">'+st.pts+'</div><div class="stat-label">Punkte</div></div><div class="stat-box"><div class="stat-value">'+st.w+'</div><div class="stat-label">Siege</div></div><div class="stat-box"><div class="stat-value">'+st.d+'</div><div class="stat-label">Unent.</div></div><div class="stat-box"><div class="stat-value">'+st.l+'</div><div class="stat-label">Niederl.</div></div></div><div class="squad-section"><button class="squad-toggle-btn" onclick="toggleSquad()">&#128101; Kader</button><div id="squadList" style="display:none;">'+squadRows+'</div></div><p class="modal-section-title" style="margin-top:1.5rem;">Alle Spiele</p>'+(items||'<p style="color:var(--text-muted)">Keine Spiele.</p>')+'</div>');
@@ -961,14 +1187,195 @@ function toggleSquad() {
   }
 }
 
+function openPlayerProfileModal(teamId, playerName) {
+  const team = S.teams[teamId];
+  if (!team) return;
+  
+  const squad = getTeamSquad(team.name_en);
+  const playerIndex = squad.indexOf(playerName);
+  
+  const rand = seededRandom(playerName + teamId);
+  
+  let position = 'Mittelfeld';
+  let number = 10;
+  let height = 180;
+  let weight = 75;
+  let club = 'Unbekannt';
+  
+  const realData = REAL_PLAYER_DATA[playerName];
+  if (realData) {
+    position = realData.position;
+    number = realData.number;
+    height = realData.height;
+    weight = realData.weight;
+    club = realData.club;
+  } else {
+    if (playerIndex >= 0 && playerIndex <= 2) position = 'Torwart';
+    else if (playerIndex >= 3 && playerIndex <= 9) position = 'Abwehr';
+    else if (playerIndex >= 10 && playerIndex <= 17) position = 'Mittelfeld';
+    else position = 'Stürmer';
+    
+    const gkNumbers = [1, 12, 22];
+    const otherNumbers = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23];
+    if (position === 'Torwart') {
+      number = gkNumbers[playerIndex] || 1;
+    } else {
+      const otherIndex = playerIndex - 3;
+      number = otherNumbers[otherIndex] || (playerIndex + 1);
+    }
+    
+    if (position === 'Torwart') height = 185 + Math.floor(rand() * 15);
+    else if (position === 'Abwehr') height = 180 + Math.floor(rand() * 15);
+    else if (position === 'Mittelfeld') height = 170 + Math.floor(rand() * 18);
+    else height = 175 + Math.floor(rand() * 17);
+    
+    weight = height - 105 + Math.floor(rand() * 10);
+    
+    if (team.name_en === 'Turkey') {
+      const turClubs = ['Galatasaray SK', 'Fenerbahçe SK', 'Beşiktaş JK', 'Trabzonspor', 'İstanbul Başakşehir FK'];
+      club = turClubs[Math.floor(rand() * turClubs.length)];
+    } else {
+      club = 'Verein unbekannt';
+    }
+  }
+  
+  const histGoals = HISTORICAL_WC_GOALS[playerName] || 0;
+  
+  const goalsDetailList = [];
+  let goalsCount = 0;
+  
+  S.games.forEach(g => {
+    if (g.finished !== 'TRUE') return;
+    
+    let scorers = [];
+    let isHome = false;
+    if (g.home_team_id === teamId) {
+      scorers = parseScorers(g.home_scorers);
+      isHome = true;
+    } else if (g.away_team_id === teamId) {
+      scorers = parseScorers(g.away_scorers);
+    }
+    
+    const minutes = [];
+    scorers.forEach(s => {
+      if (s.toLowerCase().includes('(og)') || s.toLowerCase().includes('og')) return;
+      const name = s.replace(/\s+\d+.*$/, '').trim();
+      const matched = matchPlayer(name, [playerName]);
+      if (matched) {
+        goalsCount++;
+        const minMatch = s.match(/\d+.*$/);
+        if (minMatch) {
+          minutes.push(minMatch[0].trim());
+        } else {
+          minutes.push("Spielzeit");
+        }
+      }
+    });
+    
+    if (minutes.length > 0) {
+      const oppId = isHome ? g.away_team_id : g.home_team_id;
+      const opp = S.teams[oppId];
+      const oppName = opp ? tn(opp.name_en) : (isHome ? g.away_team_name_en : g.home_team_name_en) || '?';
+      const scoreText = isHome ? `${g.home_score}:${g.away_score}` : `${g.away_score}:${g.home_score}`;
+      
+      const gameType = g.type === 'group' ? 'Gruppe ' + g.group : 
+                       g.type === 'r32' ? '16tel-Finale' : 
+                       g.type === 'r16' ? 'Achtelfinale' : 
+                       g.type === 'qf' ? 'Viertelfinale' : 
+                       g.type === 'sf' ? 'Halbfinale' : 
+                       g.type === 'third' ? 'Spiel um Platz 3' : 'Finale';
+                       
+      goalsDetailList.push({
+        oppName: oppName,
+        scoreText: scoreText,
+        minutes: minutes,
+        type: gameType,
+        date: fd(g.local_date, g.stadium_id).split(' · ')[0]
+      });
+    }
+  });
+  
+  let goalsDetailHtml = '';
+  if (goalsDetailList.length === 0) {
+    goalsDetailHtml = '<p style="color:var(--text-muted);font-size:0.85rem;font-style:italic;">Bisher keine Tore erzielt in diesem Turnier.</p>';
+  } else {
+    goalsDetailHtml = goalsDetailList.map(item => {
+      return '<div class="match-item" style="padding:0.6rem 0.8rem;margin-bottom:0.5rem;font-size:0.85rem;">'
+        + '<div style="flex:1;">'
+          + '<strong>vs. ' + item.oppName + '</strong> <span style="font-size:0.75rem;color:var(--text-muted);">(' + item.type + ', ' + item.date + ')</span>'
+        + '</div>'
+        + '<div style="background:var(--bg-primary);padding:0.2rem 0.5rem;border-radius:4px;font-weight:700;margin-right:0.75rem;">' + item.scoreText + '</div>'
+        + '<div style="color:var(--accent-gold);font-weight:700;">⚽ ' + item.minutes.join(', ') + '</div>'
+        + '</div>';
+    }).join('');
+  }
+  
+  const content = '<div class="modal-header">'
+    + '<button class="modal-close" onclick="closeModal(); setTimeout(()=>openCountryModal(\'' + teamId + '\'), 250)" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;gap:0.3rem;padding:0.4rem 0.75rem;border-radius:var(--radius-sm);">'
+      + '&#8592; Zurück'
+    + '</button>'
+    + '<span class="modal-title">Spielerprofil</span>'
+    + '<button class="modal-close" onclick="closeModal()">&#x2715;</button>'
+    + '</div>'
+    + '<div class="modal-body" style="padding:1.5rem;">'
+      + '<div class="player-profile-header" style="display:flex;align-items:center;gap:1.25rem;margin-bottom:1.5rem;padding:1rem;background:var(--bg-card);border-radius:var(--radius-lg);border:1px solid var(--border);">'
+        + '<div class="player-number-circle" style="width:46px;height:46px;border-radius:50%;background:var(--accent-gold-dim);border:2px solid var(--accent-gold);color:var(--accent-gold);display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:900;flex-shrink:0;">'
+          + number
+        + '</div>'
+        + '<div class="player-profile-info">'
+          + '<h2 style="font-size:1.2rem;font-weight:800;color:var(--text-primary);">' + playerName + '</h2>'
+          + '<p style="font-size:0.78rem;color:var(--text-secondary);display:flex;align-items:center;gap:0.4rem;margin-top:0.15rem;margin-bottom:0.15rem;">'
+            + '<img src="' + team.flag + '" style="width:18px;height:12px;object-fit:cover;border-radius:1px;"> ' + tn(team.name_en) + ' &middot; ' + position
+          + '</p>'
+          + '<p style="font-size:0.72rem;color:var(--accent-gold);font-weight:600;">🏃‍♂️ Verein: ' + club + '</p>'
+        + '</div>'
+      + '</div>'
+      + '<div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:0.75rem;display:grid;gap:0.75rem;">'
+        + '<div class="stat-box" style="padding:0.6rem;"><div class="stat-value" style="font-size:1.15rem;font-weight:800;color:var(--text-primary);">' + height + ' cm</div><div class="stat-label" style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;margin-top:0.2rem;">Größe</div></div>'
+        + '<div class="stat-box" style="padding:0.6rem;"><div class="stat-value" style="font-size:1.15rem;font-weight:800;color:var(--text-primary);">' + weight + ' kg</div><div class="stat-label" style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;margin-top:0.2rem;">Gewicht</div></div>'
+        + '<div class="stat-box" style="padding:0.6rem;"><div class="stat-value" style="font-size:1.15rem;font-weight:800;color:var(--accent-gold);">' + goalsCount + '</div><div class="stat-label" style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;margin-top:0.2rem;">WM-Tore (Live)</div></div>'
+      + '</div>'
+      + '<p class="modal-section-title" style="margin-top:1.25rem;margin-bottom:0.75rem;">Details zu den Toren (dieses Turnier)</p>'
+      + goalsDetailHtml
+    + '</div>';
+    
+  showModal(content);
+}
+
 function renderMatchItem(g) {
   const ht = S.teams[g.home_team_id], at = S.teams[g.away_team_id];
   const hn = tn(ht?ht.name_en:(g.home_team_name_en||'?')), an = tn(at?at.name_en:(g.away_team_name_en||'?'));
   const hf = ht?ht.flag:'', af = at?at.flag:'';
   const fin = g.finished==='TRUE', live = g.time_elapsed&&g.time_elapsed!=='notstarted'&&g.time_elapsed!=='finished';
   const hw = fin&&parseInt(g.home_score)>parseInt(g.away_score), aw = fin&&parseInt(g.away_score)>parseInt(g.home_score);
-  const ds = fd(g.local_date);
-  return '<div class="match-item '+(live?'match-live':!fin?'match-upcoming':'')+'" onclick="openMatchDetailModal(\''+g.id+'\')" style="cursor:pointer"><div class="match-team"><img class="team-flag-sm" src="'+hf+'" alt="" loading="lazy"><span class="match-team-name '+(hw?'match-win-home':'')+'">'+hn+'</span></div><div class="match-score-box">'+(fin||live?'<span class="match-score '+(hw?'match-win-home':'')+'">'+g.home_score+'</span><span class="match-score-sep">:</span><span class="match-score '+(aw?'match-win-away':'')+'">'+g.away_score+'</span>':'<span class="match-score" style="color:var(--text-muted);font-size:0.72rem">'+ds+'</span>')+'</div><div class="match-team right"><img class="team-flag-sm" src="'+af+'" alt="" loading="lazy"><span class="match-team-name '+(aw?'match-win-away':'')+'">'+an+'</span></div></div>';
+  const ds = fd(g.local_date, g.stadium_id);
+  
+  const tv = getGameBroadcaster(g);
+  const tvText = '<span style="font-size:0.65rem;color:var(--text-muted);font-weight:700;margin-left:0.4rem;">(' + tv + ')</span>';
+  
+  return '<div class="match-item '+(live?'match-live':!fin?'match-upcoming':'')+'" onclick="openMatchDetailModal(\''+g.id+'\')" style="cursor:pointer"><div class="match-team"><img class="team-flag-sm" src="'+hf+'" alt="" loading="lazy"><span class="match-team-name '+(hw?'match-win-home':'')+'">'+hn+'</span></div><div class="match-score-box">'+(fin||live?'<span class="match-score '+(hw?'match-win-home':'')+'">'+g.home_score+'</span><span class="match-score-sep">:</span><span class="match-score '+(aw?'match-win-away':'')+'">'+g.away_score+'</span>':'<span class="match-score" style="color:var(--text-muted);font-size:0.72rem">'+ds+'</span>')+'</div><div class="match-team right"><img class="team-flag-sm" src="'+af+'" alt="" loading="lazy"><span class="match-team-name '+(aw?'match-win-away':'')+'">'+an+'</span></div>' + tvText + '</div>';
+}
+
+function cleanPlayerName(name) {
+  let c = name.trim();
+  const mapping = {
+    'Dniz Avndav': 'Deniz Undav',
+    'Rvbn Vargas': 'Rubén Vargas',
+    'Jvhan Mnzambi': 'Johan Mnzambi',
+    'Prvmis Divid': 'Promise David',
+    'Armin Mhmich': 'Armin Mehic',
+    'Dnil Mvnvz': 'Daniel Muñoz',
+    'Lviiz Diaz': 'Luis Díaz',
+    'Kvdi Khakpv': 'Cody Gakpo',
+    'Nvnv Mndz': 'Nuno Mendes',
+    'Svfian Rhimi': 'Soufiane Rahimi',
+    'Ali Avlvan': 'Ali Olwan',
+    'Izn Alarb': 'Yazan Al-Arab',
+    'Jvlian Kviinvnz': 'Julián Quiñones',
+    'Aiash Ivida': 'Ayase Ueda',
+    'Kail Larin': 'Cyle Larin'
+  };
+  return mapping[c] || c;
 }
 
 function parseScorers(str) {
@@ -995,7 +1402,17 @@ function parseScorers(str) {
   return items.map(item => {
     let clean = item;
     if (clean.startsWith('"') && clean.endsWith('"')) clean = clean.slice(1, -1);
-    return clean.replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\bAndav\b/g, 'Undav').trim();
+    clean = clean.replace(/\\'/g, "'").replace(/\\"/g, '"').trim();
+    
+    // Split name and minute to clean name
+    const match = clean.match(/^([^\d]+)(?:\s+\d+.*)$/);
+    if (match) {
+      const rawName = match[1].trim();
+      const rest = clean.substring(rawName.length);
+      return cleanPlayerName(rawName) + rest;
+    }
+    
+    return cleanPlayerName(clean);
   }).filter(Boolean);
 }
 
@@ -1036,7 +1453,7 @@ function openMatchDetailModal(gameId) {
     scorersHtml = '<p style="text-align:center;color:var(--text-muted);font-size:0.85rem;margin-top:1.5rem;">Spiel hat noch nicht begonnen</p>';
   }
 
-  const ds = fd(g.local_date);
+  const ds = fd(g.local_date, g.stadium_id);
   const statusBadge = live ? '<span style="color:var(--accent-red);font-weight:800;animation:pulse 1s infinite">LIVE</span>' : fin ? '&#10003; Beendet' : 'Bevorstehend';
   const matchType = g.type === 'group' ? 'Gruppe ' + g.group : 
                     g.type === 'r32' ? '16tel-Finale' : 
@@ -1045,7 +1462,10 @@ function openMatchDetailModal(gameId) {
                     g.type === 'sf' ? 'Halbfinale' : 
                     g.type === 'third' ? 'Spiel um Platz 3' : 'Finale';
 
-  const content = '<div class="modal-header"><span class="modal-title">' + matchType + '</span><button class="modal-close" onclick="closeModal()">&#x2715;</button></div><div class="modal-body" style="text-align:center;"><div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:1rem;text-transform:uppercase;letter-spacing:0.05em;">' + ds + ' &middot; ' + statusBadge + '</div><div class="match-detail-row"><div ' + (ht ? 'onclick="closeModal(); setTimeout(()=>openCountryModal(\''+ht.id+'\'), 250)" style="cursor:pointer;"' : '') + ' class="match-detail-team left-team"><span class="match-detail-name">' + hn + '</span>' + (hf ? '<img src="' + hf + '" class="match-detail-flag" alt="">' : '') + '</div><div class="match-detail-score-box">' + (fin || live ? g.home_score + ' : ' + g.away_score : 'vs') + '</div><div ' + (at ? 'onclick="closeModal(); setTimeout(()=>openCountryModal(\''+at.id+'\'), 250)" style="cursor:pointer;"' : '') + ' class="match-detail-team right-team">' + (af ? '<img src="' + af + '" class="match-detail-flag" alt="">' : '') + '<span class="match-detail-name">' + an + '</span></div></div>' + scorersHtml + (g.stadium_id && g.stadium_id !== 'null' ? '<div style="margin-top:1.5rem;font-size:0.72rem;color:var(--text-muted);">Stadion ID: ' + g.stadium_id + '</div>' : '') + '</div>';
+  const tv = getGameBroadcaster(g);
+  const tvInfo = '<div style="margin-top:0.75rem;font-size:0.8rem;font-weight:700;color:var(--accent-blue);">Übertragung: ' + tv + '</div>';
+
+  const content = '<div class="modal-header"><span class="modal-title">' + matchType + '</span><button class="modal-close" onclick="closeModal()">&#x2715;</button></div><div class="modal-body" style="text-align:center;"><div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:1rem;text-transform:uppercase;letter-spacing:0.05em;">' + ds + ' &middot; ' + statusBadge + '</div><div class="match-detail-row"><div ' + (ht ? 'onclick="closeModal(); setTimeout(()=>openCountryModal(\''+ht.id+'\'), 250)" style="cursor:pointer;"' : '') + ' class="match-detail-team left-team"><span class="match-detail-name">' + hn + '</span>' + (hf ? '<img src="' + hf + '" class="match-detail-flag" alt="">' : '') + '</div><div class="match-detail-score-box">' + (fin || live ? g.home_score + ' : ' + g.away_score : 'vs') + '</div><div ' + (at ? 'onclick="closeModal(); setTimeout(()=>openCountryModal(\''+at.id+'\'), 250)" style="cursor:pointer;"' : '') + ' class="match-detail-team right-team">' + (af ? '<img src="' + af + '" class="match-detail-flag" alt="">' : '') + '<span class="match-detail-name">' + an + '</span></div></div>' + scorersHtml + tvInfo + (g.stadium_id && g.stadium_id !== 'null' ? '<div style="margin-top:1.5rem;font-size:0.72rem;color:var(--text-muted);">Stadion ID: ' + g.stadium_id + '</div>' : '') + '</div>';
   showModal(content);
 }
 
@@ -1245,7 +1665,7 @@ function renderBracketMatch(game, gw, gr, inlineStyle = '', isThird = false) {
   const aw = fin&&parseInt(game.away_score)>parseInt(game.home_score);
   const isPredH = !fin&&ht&&game.home_team_id==='0';
   const isPredA = !fin&&at&&game.away_team_id==='0';
-  const ds = fd(game.local_date);
+  const ds = fd(game.local_date, game.stadium_id);
   const teamRow = (team, label, score, isW, isL, isPred) => {
     if(!team&&!label) return '<div class="bracket-team"><span class="bracket-team-name bracket-tbd">Noch offen</span></div>';
     return '<div class="bracket-team'+(isW?' winner':'')+(isL?' loser':'')+(isPred?' predicted':'')+'">'
@@ -1293,13 +1713,20 @@ function renderMatchCard(g) {
   const hf = ht?ht.flag:'', af = at?at.flag:'';
   const fin = g.finished==='TRUE', live = g.time_elapsed&&g.time_elapsed!=='notstarted'&&g.time_elapsed!=='finished';
   const hw = fin&&parseInt(g.home_score)>parseInt(g.away_score), aw = fin&&parseInt(g.away_score)>parseInt(g.home_score);
-  const ds = fd(g.local_date);
+  const ds = fd(g.local_date, g.stadium_id);
+  
+  const tv = getGameBroadcaster(g);
+  const isAvailable = tv !== 'nicht verfügbar';
+  const tvColor = isAvailable ? 'var(--text-secondary)' : 'var(--text-muted)';
+  const tvText = '<span class="tv-badge" style="background:var(--bg-primary);border:1px solid var(--border-bright);color:' + tvColor + ';font-size:0.65rem;padding:0.1rem 0.35rem;border-radius:4px;margin-top:0.2rem;font-weight:700;display:inline-block;">TV: ' + tv + '</span>';
+  
   return '<div class="match-card'+(live?' match-live':'')+'" onclick="openMatchDetailModal(\''+g.id+'\')" style="cursor:pointer">\
 <div class="match-card-team">'
 +(hf?'<img class="match-card-flag" src="'+hf+'" alt="" loading="lazy">':'')
 +'<span class="match-card-name" style="'+(hw?'color:var(--accent-green)':'')+'">'+hn+'</span></div>\
 <div class="match-card-center">'+(fin||live?'<span class="match-card-score">'+g.home_score+' : '+g.away_score+'</span>':'<span class="match-card-score" style="color:var(--text-muted);font-size:1rem">vs</span>')
 +'<span class="match-card-info">'+(live?'<span style="color:var(--accent-red);font-weight:700">LIVE</span>':fin?'&#10003; Beendet':ds)+'</span>'
++tvText
 +(g.type==='group'?'<span class="group-tag">Gr. '+g.group+'</span>':'')+'</div>\
 <div class="match-card-team right">'
 +(af?'<img class="match-card-flag" src="'+af+'" alt="" loading="lazy">':'')
@@ -1507,7 +1934,44 @@ function closeModal(){
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 
 function pd(s){if(!s)return 0;const[d,t]=s.split(' ');if(!d)return 0;const[m,dy,y]=d.split('/');const[h,mn]=(t||'00:00').split(':');return new Date(y,m-1,dy,h,mn);}
-function fd(s){if(!s)return '?';try{const d=pd(s);return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})+' \u00b7 '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});}catch{return s;}}
+
+function getMeszOffset(stadiumId) {
+  const id = String(stadiumId);
+  if (['1', '2', '3'].includes(id)) return 8; // Mexico (UTC-6)
+  if (['4', '5', '6'].includes(id)) return 7; // Central US (UTC-5)
+  if (['7', '8', '9', '10', '11', '12'].includes(id)) return 6; // Eastern US/Canada (UTC-4)
+  if (['13', '14', '15', '16'].includes(id)) return 9; // Western US/Canada (UTC-7)
+  return 6;
+}
+
+function getMeszDate(s, stadiumId) {
+  if(!s) return null;
+  const parts = s.split(' ');
+  const d = parts[0];
+  const t = parts[1] || '00:00';
+  if(!d) return null;
+  const [m, dy, y] = d.split('/');
+  const [h, mn] = t.split(':');
+  const offset = getMeszOffset(stadiumId);
+  const meszTimestamp = Date.UTC(parseInt(y), parseInt(m) - 1, parseInt(dy), parseInt(h) + offset, parseInt(mn));
+  return new Date(meszTimestamp);
+}
+
+function fd(s, stadiumId){
+  if(!s) return '?';
+  try {
+    const meszDate = getMeszDate(s, stadiumId);
+    if (!meszDate) return s;
+    const day = String(meszDate.getUTCDate()).padStart(2, '0');
+    const month = String(meszDate.getUTCMonth() + 1).padStart(2, '0');
+    const hours = String(meszDate.getUTCHours()).padStart(2, '0');
+    const minutes = String(meszDate.getUTCMinutes()).padStart(2, '0');
+    return `${day}.${month}. · ${hours}:${minutes} MESZ`;
+  } catch(e) {
+    return s;
+  }
+}
+
 function fdf(s){if(!s||s==='?')return 'Unbekannt';try{const[m,d,y]=s.split('/');return new Date(y,m-1,d).toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}catch{return s;}}
 
 loadAllData();
