@@ -251,6 +251,22 @@
 <div id="modalOverlay" style="display:none"></div>
 
 <script>
+window.addEventListener('error', function(e) {
+  const div = document.createElement('div');
+  div.style.position = 'fixed';
+  div.style.top = '0';
+  div.style.left = '0';
+  div.style.width = '100%';
+  div.style.backgroundColor = '#dc2626';
+  div.style.color = '#fff';
+  div.style.padding = '1.5rem';
+  div.style.zIndex = '999999';
+  div.style.fontFamily = 'monospace';
+  div.style.whiteSpace = 'pre-wrap';
+  div.style.boxShadow = '0 4px 20px rgba(0,0,0,0.5)';
+  div.innerHTML = '<strong>Fataler JS-Fehler:</strong><br>' + e.message + '<br><small>Datei: ' + e.filename + ' | Zeile: ' + e.lineno + ':' + e.colno + '</small>';
+  document.body.appendChild(div);
+});
 const API = 'https://worldcup26.ir/get';
 let S = { teams:{}, groups:[], games:[], loaded:false };
 let thirdAssignments = {};
@@ -399,12 +415,13 @@ async function loadAllData() {
 }
 
 function sortTeams(group) {
+  if (!group || !group.teams) return [];
   return [...group.teams].sort((a,b) => {
-    const pd = parseInt(b.pts)-parseInt(a.pts);
+    const pd = (parseInt(b.pts)||0)-(parseInt(a.pts)||0);
     if(pd) return pd;
-    const gdd = parseInt(b.gd)-parseInt(a.gd);
+    const gdd = (parseInt(b.gd)||0)-(parseInt(a.gd)||0);
     if(gdd) return gdd;
-    return parseInt(b.gf)-parseInt(a.gf);
+    return (parseInt(b.gf)||0)-(parseInt(a.gf)||0);
   });
 }
 
