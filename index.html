@@ -265,6 +265,28 @@ document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', (
   document.getElementById('view'+t[0].toUpperCase()+t.slice(1)).classList.add('active');
 }));
 
+function loadCachedData() {
+  try {
+    const cached = localStorage.getItem('wm26_data');
+    if (cached) {
+      const data = JSON.parse(cached);
+      if (data.teams && data.groups && data.games) {
+        S.teams = data.teams;
+        S.groups = data.groups;
+        S.games = data.games;
+        S.loaded = true;
+        const el = document.getElementById('lastUpdate');
+        if(el) el.textContent = 'Zuletzt (Cache): ' + (data.time || 'unbekannt');
+        renderGroups(); renderBracket(); renderMatches();
+        return true;
+      }
+    }
+  } catch (e) {
+    console.warn("Failed to load cached data", e);
+  }
+  return false;
+}
+
 async function fetchData(url) {
   // 1. Direkt versuchen
   try {
@@ -287,6 +309,15 @@ async function fetchData(url) {
   } catch (e) {
     console.warn(`AllOrigins proxy failed for ${url}`, e);
   }
+
+  // 3. Corsproxy.io als letzte Alternative versuchen
+  try {
+    const proxyUrl = 'https://corsproxy.io/?url=' + encodeURIComponent(url);
+    const res = await fetch(proxyUrl);
+    if (res.ok) return await res.json();
+  } catch (e) {
+    console.warn(`Corsproxy.io failed for ${url}`, e);
+  }
   
   throw new Error('Verbindung zur WM-Datenbank fehlgeschlagen (CORS/Netzwerkfehler).');
 }
@@ -294,26 +325,50 @@ async function fetchData(url) {
 async function loadAllData() {
   const rb = document.getElementById('refreshBtn');
   if(rb) rb.disabled = true;
+  
+  const hasCache = loadCachedData();
+  
   try {
-    const [td, gd, md] = await Promise.all([
-      fetchData(API+'/teams'),
-      fetchData(API+'/groups'),
-      fetchData(API+'/games')
-    ]);
+    // Seriell abfragen mit kleiner Verzögerung, um Rate-Limits zu schonen
+    const td = await fetchData(API+'/teams');
+    await new Promise(r => setTimeout(r, 200));
+    const gd = await fetchData(API+'/groups');
+    await new Promise(r => setTimeout(r, 200));
+    const md = await fetchData(API+'/games');
+    
     S.teams = {};
     (td.teams||[]).forEach(t => S.teams[t.id] = t);
     S.groups = gd.groups || [];
     S.games = md.games || [];
     S.loaded = true;
+    
+    const timeStr = new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+    
+    try {
+      localStorage.setItem('wm26_data', JSON.stringify({
+        teams: S.teams,
+        groups: S.groups,
+        games: S.games,
+        time: timeStr
+      }));
+    } catch(e) {
+      console.warn("LocalStorage save failed", e);
+    }
+    
     const el = document.getElementById('lastUpdate');
-    if(el) el.textContent = 'Zuletzt: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+    if(el) el.textContent = 'Zuletzt: '+timeStr;
     renderGroups(); renderBracket(); renderMatches();
   } catch(e) {
     console.error(e);
-    ['groupsContainer','bracketContainer','matchesContainer'].forEach(id => {
-      const el = document.getElementById(id);
-      if(el) el.innerHTML = '<div class="error-banner">&#9888; Fehler beim Laden. Seite neu laden.<br><small>'+e.message+'</small></div>';
-    });
+    if (!hasCache) {
+      ['groupsContainer','bracketContainer','matchesContainer'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.innerHTML = '<div class="error-banner">&#9888; Fehler beim Laden. Seite neu laden.<br><small>'+e.message+'</small></div>';
+      });
+    } else {
+      const el = document.getElementById('lastUpdate');
+      if(el) el.textContent = 'Fehler (nutze Cache)';
+    }
   } finally { if(rb) rb.disabled = false; }
 }
 
@@ -655,6 +710,7 @@ function pd(s){if(!s)return 0;const[d,t]=s.split(' ');if(!d)return 0;const[m,dy,
 function fd(s){if(!s)return '?';try{const d=pd(s);return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})+' \u00b7 '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});}catch{return s;}}
 function fdf(s){if(!s||s==='?')return 'Unbekannt';try{const[m,d,y]=s.split('/');return new Date(y,m-1,d).toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}catch{return s;}}
 
+loadCachedData();
 loadAllData();
 </script>
 </body>
