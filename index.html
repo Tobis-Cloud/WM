@@ -723,6 +723,45 @@
       color: #fff;
     }
     
+    
+    /* Deutschland Dashboard CSS */
+    .germany-banner {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 1.5rem;
+    }
+    .germany-banner-flag {
+      width: 80px;
+      height: 53px;
+      object-fit: cover;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .germany-banner-content h2 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 0.25rem;
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-gold) 60%, var(--accent-red) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .germany-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 1.5rem;
+    }
+    @media(max-width: 992px) {
+      .germany-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
     @media(max-width:768px){
       .hamburger-btn {
         display: flex;
@@ -746,13 +785,18 @@
 <div class="mobile-nav-menu" id="mobileNavMenu">
   <button class="mobile-menu-close" onclick="toggleMobileMenu()">&#x2715;</button>
   <p style="font-size:1.1rem;font-weight:800;margin-bottom:1.5rem;background:linear-gradient(135deg,var(--accent-gold),var(--accent-blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Navigation</p>
+  <button class="mobile-nav-item" data-tab="germany" onclick="selectMobileTab('germany')"><span>🇩🇪 Deutschland</span></button>
   <button class="mobile-nav-item active" data-tab="groups" onclick="selectMobileTab('groups')"><span>&#127903; Gruppen</span></button>
   <button class="mobile-nav-item" data-tab="bracket" onclick="selectMobileTab('bracket')"><span>&#127942; KO-Runden</span></button>
   <button class="mobile-nav-item" data-tab="matches" onclick="selectMobileTab('matches')"><span>&#128197; Alle Spiele</span></button>
   <button class="mobile-nav-item" data-tab="teams" onclick="selectMobileTab('teams')"><span>&#127937; Teams</span></button>
+  <button class="refresh-btn" id="mobileRefreshBtn" onclick="loadAllData(); toggleMobileMenu();" style="width: 100%; margin-top: auto; padding: 0.75rem; border-radius: 50px; font-size: 0.875rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer;">
+    &#8635; Live-Daten aktualisieren
+  </button>
 </div>
 
 <nav class="nav-tabs">
+  <button class="tab-btn" data-tab="germany" id="tabGermany"><span>🇩🇪 Deutschland</span></button>
   <button class="tab-btn active" data-tab="groups" id="tabGroups"><span>&#127903; Gruppen</span></button>
   <button class="tab-btn" data-tab="bracket" id="tabBracket"><span>&#127942; KO-Runden</span></button>
   <button class="tab-btn" data-tab="matches" id="tabMatches"><span>&#128197; Alle Spiele</span></button>
@@ -781,6 +825,14 @@
   <div class="view" id="viewTeams">
     <div class="status-bar"><div class="status-live"><span class="live-dot"></span><span>Alle 48 Nationalmannschaften</span></div></div>
     <div id="teamsContainer"><div class="loading-screen"><div class="spinner"></div><p class="loading-text">Lade Teams&hellip;</p></div></div>
+  </div>
+  <div class="view" id="viewGermany">
+    <div class="status-bar">
+      <div class="status-live"><span class="live-dot"></span><span>Nationalmannschaft &middot; Deutschland Dashboard</span></div>
+    </div>
+    <div id="germanyDashboardContainer">
+      <div class="loading-screen"><div class="spinner"></div><p class="loading-text">Lade Dashboard&hellip;</p></div>
+    </div>
   </div>
 </main>
 
@@ -1325,7 +1377,9 @@ async function fetchData(url) {
 
 async function loadAllData() {
   const rb = document.getElementById('refreshBtn');
+  const mrb = document.getElementById('mobileRefreshBtn');
   if(rb) rb.disabled = true;
+  if(mrb) mrb.disabled = true;
   try {
     const [td, gd, md] = await Promise.all([
       fetchData(API+'/teams'),
@@ -1339,15 +1393,18 @@ async function loadAllData() {
     S.loaded = true;
     const el = document.getElementById('lastUpdate');
     if(el) el.textContent = 'Zuletzt: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
-    renderGroups(); renderBracket(); renderMatches(); renderTeams();
+    renderGroups(); renderBracket(); renderMatches(); renderTeams(); renderGermanyDashboard();
     startAutoUpdate();
   } catch(e) {
     console.error(e);
-    ['groupsContainer','bracketContainer','matchesContainer','teamsContainer'].forEach(id => {
+    ['groupsContainer','bracketContainer','matchesContainer','teamsContainer','germanyDashboardContainer'].forEach(id => {
       const el = document.getElementById(id);
       if(el) el.innerHTML = '<div class="error-banner">&#9888; Fehler beim Laden. Seite neu laden.<br><small>'+e.message+'</small></div>';
     });
-  } finally { if(rb) rb.disabled = false; }
+  } finally {
+    if(rb) rb.disabled = false;
+    if(mrb) mrb.disabled = false;
+  }
 }
 
 function sortTeams(group) {
@@ -2317,6 +2374,144 @@ function fd(s, stadiumId){
 }
 
 function fdf(s){if(!s||s==='?')return 'Unbekannt';try{const[m,d,y]=s.split('/');return new Date(y,m-1,d).toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}catch{return s;}}
+
+function renderGermanyDashboard() {
+  const container = document.getElementById('germanyDashboardContainer');
+  if (!container || !S.loaded) return;
+  
+  const team = S.teams['17'];
+  if (!team) {
+    container.innerHTML = '<div class="error-banner">Deutschland Spieldaten konnten nicht geladen werden.</div>';
+    return;
+  }
+  
+  const statusKey = getTeamStatus(team);
+  let statusText = 'In der Gruppenphase (Entscheidung offen)';
+  let statusColor = 'var(--accent-gold)';
+  if (statusKey === 'weiter') {
+    statusText = '🏆 Qualifiziert für die K.o.-Runde';
+    statusColor = 'var(--accent-green)';
+  } else if (statusKey === 'ausgeschieden') {
+    statusText = '❌ Ausgeschieden';
+    statusColor = 'var(--accent-red)';
+  }
+  
+  let html = '<div class="germany-banner">'
+    + '<img class="germany-banner-flag" src="' + team.flag + '" alt="Deutschland">'
+    + '<div class="germany-banner-content">'
+      + '<h2>Deutschland Dashboard</h2>'
+      + '<p style="font-size:0.875rem;color:var(--text-secondary);font-weight:600;display:flex;align-items:center;gap:0.5rem;margin-top:0.25rem;">'
+        + 'Turnier-Status: <span style="color:' + statusColor + ';font-weight:800;">' + statusText + '</span>'
+      + '</p>'
+    + '</div>'
+    + '</div>';
+  
+  html += '<div class="germany-grid">';
+  
+  // LINKE SPALTE: Gruppentabelle & Spiele
+  html += '<div class="germany-col-left">';
+  
+  const group = S.groups.find(g => g.name === 'E');
+  if (group) {
+    const sorted = sortTeams(group);
+    const pc = ['qualify', 'runner', '', ''];
+    let tableRows = sorted.map((t, i) => {
+      const gTeam = S.teams[t.team_id];
+      if (!gTeam) return '';
+      const isGermany = t.team_id === '17';
+      const rowStyle = isGermany ? 'background:rgba(245,200,66,0.12); border-left:3px solid var(--accent-gold); font-weight:700;' : 'cursor:pointer;';
+      const gd = parseInt(t.gd), gdc = gd > 0 ? 'gd-pos' : gd < 0 ? 'gd-neg' : 'gd-zero', gds = gd > 0 ? '+' + gd : '' + gd;
+      
+      return '<tr class="' + pc[i] + '" onclick="openCountryModal(\'' + gTeam.id + '\')" style="' + rowStyle + '">'
+        + '<td><div class="team-cell"><span style="color:var(--text-muted);font-size:0.8rem;width:15px;font-weight:700;">' + (i + 1) + '</span><img class="team-flag-md" src="' + gTeam.flag + '" style="width:22px;height:15px;object-fit:cover;border-radius:2px;"><span class="team-name-md">' + tn(gTeam.name_en) + '</span></div></td>'
+        + '<td style="text-align:center;color:var(--text-secondary);">' + t.mp + '</td>'
+        + '<td style="text-align:center;" class="' + gdc + '">' + gds + '</td>'
+        + '<td style="text-align:center;font-weight:800;color:var(--accent-gold);" class="pts-cell">' + t.pts + '</td>'
+        + '</tr>';
+    }).join('');
+    
+    html += '<p class="modal-section-title">Gruppentabelle (Gruppe E)</p>'
+      + '<table class="standings-table" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1.5rem;">'
+        + '<thead><tr><th>Team</th><th style="text-align:center">Sp</th><th style="text-align:center">TD</th><th style="text-align:center">Pkt</th></tr></thead>'
+        + '<tbody>' + tableRows + '</tbody>'
+      + '</table>';
+  }
+  
+  const germanyGames = S.games.filter(g => g.home_team_id === '17' || g.away_team_id === '17').sort((a,b) => pd(a.local_date) - pd(b.local_date));
+  let gamesHtml = germanyGames.map(g => {
+    const isHome = g.home_team_id === '17';
+    const oppId = isHome ? g.away_team_id : g.home_team_id;
+    const opp = S.teams[oppId];
+    const oppName = opp ? tn(opp.name_en) : (isHome ? g.away_team_label || g.away_team_name_en : g.home_team_label || g.home_team_name_en) || '?';
+    const oppFlag = opp ? opp.flag : '';
+    const ms = isHome ? g.home_score : g.away_score;
+    const os = isHome ? g.away_score : g.home_score;
+    const fin = g.finished === 'TRUE';
+    const live = g.time_elapsed && g.time_elapsed !== 'notstarted' && g.time_elapsed !== 'finished';
+    const ds = fd(g.local_date, g.stadium_id);
+    const tv = getGameBroadcaster(g);
+    
+    let scoreText = '<span style="color:var(--text-muted);font-size:0.8rem;font-weight:600;">' + ds + '</span>';
+    if (fin || live) {
+      const wStyle = parseInt(ms) > parseInt(os) ? 'color:var(--accent-green);font-weight:700;' : parseInt(ms) < parseInt(os) ? 'color:var(--accent-red);' : '';
+      scoreText = '<span style="font-size:1.1rem;font-weight:900;' + wStyle + '">' + g.home_score + ' : ' + g.away_score + '</span>';
+    }
+    
+    const tvBadge = '<span style="font-size:0.65rem;background:var(--bg-primary);border:1px solid var(--border-bright);padding:0.1rem 0.4rem;border-radius:4px;color:var(--text-secondary);font-weight:700;margin-top:0.2rem;display:inline-block;">TV: ' + tv + '</span>';
+    const gameLabel = g.type === 'group' ? 'Gruppe E' :
+                      g.type === 'r32' ? '16tel-Finale' :
+                      g.type === 'r16' ? 'Achtelfinale' :
+                      g.type === 'qf' ? 'Viertelfinale' :
+                      g.type === 'sf' ? 'Halbfinale' :
+                      g.type === 'third' ? 'Spiel um Platz 3' : 'Finale';
+    
+    return '<div class="match-item ' + (live ? 'match-live' : !fin ? 'match-upcoming' : '') + '" onclick="openMatchDetailModal(\'' + g.id + '\')" style="cursor:pointer;padding:0.75rem 1rem;margin-bottom:0.6rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);">'
+      + '<div style="font-size:0.6rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.25rem;font-weight:700;">' + gameLabel + '</div>'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;">'
+        + '<div class="match-team" style="flex:1;"><img class="team-flag-sm" src="' + team.flag + '" alt=""><span class="match-team-name" style="' + (fin && parseInt(ms)>parseInt(os) ? 'font-weight:700;color:var(--accent-green);' : '') + '">Deutschland</span></div>'
+        + '<div style="display:flex;flex-direction:column;align-items:center;min-width:70px;">' + scoreText + (live ? '<small style="color:var(--accent-red);font-weight:700;font-size:0.65rem;margin-top:0.1rem;">LIVE</small>' : '') + tvBadge + '</div>'
+        + '<div class="match-team right" style="flex:1;flex-direction:row-reverse;text-align:right;"><img class="team-flag-sm" src="' + oppFlag + '" alt=""><span class="match-team-name" style="' + (fin && parseInt(os)>parseInt(ms) ? 'font-weight:700;color:var(--accent-green);' : '') + '">' + oppName + '</span></div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+  
+  html += '<p class="modal-section-title">Deutschland Spiele</p>' + gamesHtml + '</div>';
+  
+  // RECHTE SPALTE: Kader von Deutschland
+  html += '<div class="germany-col-right">';
+  
+  const squad = getTeamSquad('Germany');
+  const goalsMap = calculatePlayerGoals();
+  
+  let squadHtml = squad.map(player => {
+    const key = '17_' + player;
+    const goals = goalsMap[key] || 0;
+    const goalsBadge = goals > 0 ? '<span class="player-goals-badge" style="background:var(--accent-gold-dim);border:1px solid var(--accent-gold);color:var(--accent-gold);font-size:0.68rem;padding:0.15rem 0.45rem;border-radius:4px;font-weight:700;margin-left:auto;">⚽ ' + goals + ' ' + (goals === 1 ? 'Tor' : 'Tore') + '</span>' : '';
+    const safePlayerName = player.replace(/'/g, "\\'");
+    
+    let clubText = 'Verein unbekannt';
+    let numberText = '';
+    const realData = REAL_PLAYER_DATA[player];
+    if (realData) {
+      clubText = realData.club;
+      numberText = '<span style="font-size:0.75rem;background:var(--bg-primary);border:1px solid var(--border-bright);width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:var(--accent-gold);font-weight:800;margin-right:0.5rem;flex-shrink:0;">' + realData.number + '</span>';
+    }
+    
+    return '<div class="squad-player-row" onclick="openPlayerProfileModal(\'17\', \'' + safePlayerName + '\')" style="display:flex;align-items:center;padding:0.65rem 0.85rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:0.45rem;cursor:pointer;transition:all 0.2s;">'
+      + numberText
+      + '<div style="display:flex;flex-direction:column;">'
+        + '<span class="player-name" style="font-size:0.875rem;font-weight:600;color:var(--text-primary);">' + player + '</span>'
+        + '<span style="font-size:0.68rem;color:var(--text-secondary);margin-top:0.1rem;">🏃‍♂️ ' + clubText + '</span>'
+      + '</div>'
+      + goalsBadge
+      + '</div>';
+  }).join('');
+  
+  html += '<p class="modal-section-title">Kader (Turnier)</p>' + squadHtml + '</div>';
+  
+  html += '</div>';
+  container.innerHTML = html;
+}
 
 loadAllData();
 </script>
