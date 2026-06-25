@@ -242,6 +242,7 @@
 <script>
 const API = 'https://worldcup26.ir/get';
 let S = { teams:{}, groups:[], games:[], loaded:false };
+let thirdAssignments = {};
 const DE = {'Mexico':'Mexiko','South Africa':'S\u00fcdafrika','South Korea':'S\u00fcdkorea','Czech Republic':'Tschechien','Canada':'Kanada','Bosnia and Herzegovina':'Bosnien-H.','Qatar':'Katar','Switzerland':'Schweiz','Brazil':'Brasilien','Morocco':'Marokko','Haiti':'Haiti','Scotland':'Schottland','United States':'USA','Paraguay':'Paraguay','Australia':'Australien','Turkey':'T\u00fcrkei','Germany':'Deutschland','Cura\u00e7ao':'Cura\u00e7ao','Ivory Coast':'Elfenbeink\u00fcste','Ecuador':'Ecuador','Netherlands':'Niederlande','Japan':'Japan','Sweden':'Schweden','Tunisia':'Tunesien','Belgium':'Belgien','Egypt':'\u00c4gypten','Iran':'Iran','New Zealand':'Neuseeland','Spain':'Spanien','Cape Verde':'Kap Verde','Saudi Arabia':'Saudi-Arabien','Uruguay':'Uruguay','France':'Frankreich','Senegal':'Senegal','Iraq':'Irak','Norway':'Norwegen','Argentina':'Argentinien','Algeria':'Algerien','Austria':'\u00d6sterreich','Jordan':'Jordanien','Portugal':'Portugal','Democratic Republic of the Congo':'DR Kongo','Uzbekistan':'Usbekistan','Colombia':'Kolumbien','England':'England','Croatia':'Kroatien','Ghana':'Ghana','Panama':'Panama'};
 const tn = n => DE[n] || n;
 
@@ -323,7 +324,7 @@ function renderGroups() {
       if(!team) return '';
       return '<div class="group-team-row"><span class="pos-badge '+pc[i]+'">'+pl[i]+'</span><img class="team-flag-sm" src="'+team.flag+'" alt="" loading="lazy"><span class="team-name-sm">'+tn(team.name_en)+'</span><span class="team-pts-sm">'+t.pts+' Pkt</span></div>';
     }).join('');
-    html += '<div class="group-card" data-group="'+g.name+'"><div class="group-header"><span class="group-letter">Gruppe '+g.name+'</span><span class="group-badge">'+played+'/'+ggs.length+' Sp.</span></div><div class="group-teams-list">'+rows+'</div><div class="group-card-footer">Klicken f&#252;r Details</div></div>';
+    html += '<div class="group-card" data-group="'+g.name+'"><div class="group-header"><span class="group-letter">Gruppe '+g.name+'</span><span class="group-badge"> '+played+'/'+ggs.length+' Sp.</span></div><div class="group-teams-list">'+rows+'</div><div class="group-card-footer">Klicken f&#252;r Details</div></div>';
   });
   html += '</div>';
   c.innerHTML = html;
@@ -340,7 +341,7 @@ function openGroupModal(group) {
     const team = S.teams[t.team_id];
     if(!team) return '';
     const gd = parseInt(t.gd), gdc = gd>0?'gd-pos':gd<0?'gd-neg':'gd-zero', gds = gd>0?'+'+gd:''+gd;
-    return '<tr class="'+pc[i]+'" onclick="openCountryModal(\''+team.id+'\')" style="cursor:pointer"><td><div class="team-cell"><span style="color:var(--text-muted);font-size:0.8rem;width:18px;font-weight:700">'+(i+1)+'</span><img class="team-flag-md" src="'+team.flag+'" alt="" loading="lazy"><span class="team-name-md">'+tn(team.name_en)+'</span></div></td><td style="text-align:center;color:var(--text-secondary)">'+t.mp+'</td><td style="text-align:center;color:var(--accent-green)">'+t.w+'</td><td style="text-align:center;color:var(--text-secondary)">'+t.d+'</td><td style="text-align:center;color:var(--accent-red)">'+t.l+'</td><td style="text-align:center;color:var(--text-secondary)">'+t.gf+':'+t.ga+'</td><td style="text-align:center" class="'+gdc+'">'+gds+'</td><td style="text-align:center" class="pts-cell">'+t.pts+'</td></tr>';
+    return '<tr class="'+pc[i]+'" onclick="openCountryModal(''+team.id+'')" style="cursor:pointer"><td><div class="team-cell"><span style="color:var(--text-muted);font-size:0.8rem;width:18px;font-weight:700">'+(i+1)+'</span><img class="team-flag-md" src="'+team.flag+'" alt="" loading="lazy"><span class="team-name-md">'+tn(team.name_en)+'</span></div></td><td style="text-align:center;color:var(--text-secondary)">'+t.mp+'</td><td style="text-align:center;color:var(--accent-green)">'+t.w+'</td><td style="text-align:center;color:var(--text-secondary)">'+t.d+'</td><td style="text-align:center;color:var(--accent-red)">'+t.l+'</td><td style="text-align:center;color:var(--text-secondary)">'+t.gf+':'+t.ga+'</td><td style="text-align:center" class="'+gdc+'">'+gds+'</td><td style="text-align:center" class="pts-cell">'+t.pts+'</td></tr>';
   }).join('');
   const ggs = S.games.filter(g=>g.group===group.name&&g.type==='group').sort((a,b)=>pd(a.local_date)-pd(b.local_date));
   const matchItems = ggs.map(g=>renderMatchItem(g)).join('');
@@ -365,7 +366,7 @@ function openCountryModal(tid) {
     let res='',rc='';
     if(fin){if(parseInt(ms)>parseInt(os)){rc='color:var(--accent-green)';res='S'}else if(parseInt(ms)<parseInt(os)){rc='color:var(--accent-red)';res='N'}else{rc='color:var(--text-secondary)';res='U'}}
     const ds = fd(g.local_date);
-    return '<div class="match-item '+(!fin?'match-upcoming':'')+'"><div class="match-team"><img class="team-flag-sm" src="'+team.flag+'" alt="" loading="lazy"><span class="match-team-name" style="'+(fin&&parseInt(ms)>parseInt(os)?'font-weight:700;color:var(--accent-green)':'')+'">'+tn(team.name_en)+'</span></div><div class="match-score-box">'+(fin?'<span class="match-score">'+ms+'</span><span class="match-score-sep">:</span><span class="match-score">'+os+'</span>':'<span class="match-score" style="color:var(--text-muted);font-size:0.75rem">'+ds+'</span>')+'</div><div class="match-team right"><img class="team-flag-sm" src="'+oppFlag+'" alt="" loading="lazy"><span class="match-team-name" style="'+(fin&&parseInt(os)>parseInt(ms)?'font-weight:700;color:var(--accent-green)':'')+'">'+oppName+'</span></div>'+(fin?'<span style="'+rc+';font-weight:700;font-size:0.75rem;margin-left:0.25rem">'+res+'</span>':'')+'</div>';
+    return '<div class="match-item '+(!fin?'match-upcoming':'')+'" onclick="openMatchDetailModal(''+g.id+'')" style="cursor:pointer"><div class="match-team"><img class="team-flag-sm" src="'+team.flag+'" alt="" loading="lazy"><span class="match-team-name" style="'+(fin&&parseInt(ms)>parseInt(os)?'font-weight:700;color:var(--accent-green)':'')+'">'+tn(team.name_en)+'</span></div><div class="match-score-box">'+(fin?'<span class="match-score">'+ms+'</span><span class="match-score-sep">:</span><span class="match-score">'+os+'</span>':'<span class="match-score" style="color:var(--text-muted);font-size:0.75rem">'+ds+'</span>')+'</div><div class="match-team right"><img class="team-flag-sm" src="'+oppFlag+'" alt="" loading="lazy"><span class="match-team-name" style="'+(fin&&parseInt(os)>parseInt(ms)?'font-weight:700;color:var(--accent-green)':'')+'">'+oppName+'</span></div>'+(fin?'<span style="'+rc+';font-weight:700;font-size:0.75rem;margin-left:0.25rem">'+res+'</span>':'')+'</div>';
   }).join('');
   showModal('<div class="modal-header"><span class="modal-title">'+tn(team.name_en)+'</span><button class="modal-close" onclick="closeModal()">&#x2715;</button></div><div class="modal-body"><div class="country-header"><img class="country-flag-lg" src="'+team.flag+'" alt=""><div class="country-info"><h2>'+tn(team.name_en)+'</h2><p>FIFA-Code: '+team.fifa_code+' &middot; Gruppe '+team.groups+'</p></div></div><div class="stats-row"><div class="stat-box"><div class="stat-value">'+st.pts+'</div><div class="stat-label">Punkte</div></div><div class="stat-box"><div class="stat-value">'+st.w+'</div><div class="stat-label">Siege</div></div><div class="stat-box"><div class="stat-value">'+st.d+'</div><div class="stat-label">Unent.</div></div><div class="stat-box"><div class="stat-value">'+st.l+'</div><div class="stat-label">Niederl.</div></div></div><p class="modal-section-title">Gruppenspiele</p>'+(items||'<p style="color:var(--text-muted)">Keine Spiele.</p>')+'</div>');
 }
@@ -377,7 +378,85 @@ function renderMatchItem(g) {
   const fin = g.finished==='TRUE', live = g.time_elapsed&&g.time_elapsed!=='notstarted'&&g.time_elapsed!=='finished';
   const hw = fin&&parseInt(g.home_score)>parseInt(g.away_score), aw = fin&&parseInt(g.away_score)>parseInt(g.home_score);
   const ds = fd(g.local_date);
-  return '<div class="match-item '+(live?'match-live':!fin?'match-upcoming':'')+'"><div class="match-team"><img class="team-flag-sm" src="'+hf+'" alt="" loading="lazy"><span class="match-team-name '+(hw?'match-win-home':'')+'">'+hn+'</span></div><div class="match-score-box">'+(fin||live?'<span class="match-score '+(hw?'match-win-home':'')+'">'+g.home_score+'</span><span class="match-score-sep">:</span><span class="match-score '+(aw?'match-win-away':'')+'">'+g.away_score+'</span>':'<span class="match-score" style="color:var(--text-muted);font-size:0.72rem">'+ds+'</span>')+'</div><div class="match-team right"><img class="team-flag-sm" src="'+af+'" alt="" loading="lazy"><span class="match-team-name '+(aw?'match-win-away':'')+'">'+an+'</span></div></div>';
+  return '<div class="match-item '+(live?'match-live':!fin?'match-upcoming':'')+'" onclick="openMatchDetailModal(''+g.id+'')" style="cursor:pointer"><div class="match-team"><img class="team-flag-sm" src="'+hf+'" alt="" loading="lazy"><span class="match-team-name '+(hw?'match-win-home':'')+'">'+hn+'</span></div><div class="match-score-box">'+(fin||live?'<span class="match-score '+(hw?'match-win-home':'')+'">'+g.home_score+'</span><span class="match-score-sep">:</span><span class="match-score '+(aw?'match-win-away':'')+'">'+g.away_score+'</span>':'<span class="match-score" style="color:var(--text-muted);font-size:0.72rem">'+ds+'</span>')+'</div><div class="match-team right"><img class="team-flag-sm" src="'+af+'" alt="" loading="lazy"><span class="match-team-name '+(aw?'match-win-away':'')+'">'+an+'</span></div></div>';
+}
+
+function parseScorers(str) {
+  if (!str || str === 'null' || str === '{}') return [];
+  let s = str.trim();
+  if (s.startsWith('{') && s.endsWith('}')) s = s.slice(1, -1);
+  const items = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (c === '"') {
+      inQuotes = !inQuotes;
+    } else if (c === ',' && !inQuotes) {
+      items.push(current.trim());
+      current = '';
+    } else if (c === '\\' && i + 1 < s.length && (s[i+1] === "'" || s[i+1] === '"')) {
+      // Skip backslash
+    } else {
+      current += c;
+    }
+  }
+  if (current) items.push(current.trim());
+  return items.map(item => {
+    let clean = item;
+    if (clean.startsWith('"') && clean.endsWith('"')) clean = clean.slice(1, -1);
+    return clean.replace(/\\'/g, "'").replace(/\\"/g, '"').trim();
+  }).filter(Boolean);
+}
+
+function openMatchDetailModal(gameId) {
+  const g = S.games.find(x => x.id === gameId);
+  if (!g) return;
+  const ht = S.teams[g.home_team_id], at = S.teams[g.away_team_id];
+  const hn = tn(ht ? ht.name_en : g.home_team_name_en || '?');
+  const an = tn(at ? at.name_en : g.away_team_name_en || '?');
+  const hf = ht ? ht.flag : '';
+  const af = at ? at.flag : '';
+  
+  const fin = g.finished === 'TRUE';
+  const live = g.time_elapsed && g.time_elapsed !== 'notstarted' && g.time_elapsed !== 'finished';
+  
+  const homeScorers = parseScorers(g.home_scorers);
+  const awayScorers = parseScorers(g.away_scorers);
+  
+  let scorersHtml = '';
+  if (fin || live) {
+    if (homeScorers.length === 0 && awayScorers.length === 0) {
+      scorersHtml = '<p style="text-align:center;color:var(--text-muted);font-size:0.85rem;font-style:italic;margin-top:1rem;">Keine Tore in diesem Spiel</p>';
+    } else {
+      scorersHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);">';
+      scorersHtml += '<div style="text-align:right;border-right:1px solid var(--border);padding-right:1rem;">';
+      homeScorers.forEach(s => {
+        scorersHtml += '<div style="font-size:0.85rem;margin-bottom:0.4rem;color:var(--text-primary);">&#9917; ' + s + '</div>';
+      });
+      scorersHtml += '</div>';
+      scorersHtml += '<div style="text-align:left;padding-left:1rem;">';
+      awayScorers.forEach(s => {
+        scorersHtml += '<div style="font-size:0.85rem;margin-bottom:0.4rem;color:var(--text-primary);">&#9917; ' + s + '</div>';
+      });
+      scorersHtml += '</div>';
+      scorersHtml += '</div>';
+    }
+  } else {
+    scorersHtml = '<p style="text-align:center;color:var(--text-muted);font-size:0.85rem;margin-top:1.5rem;">Spiel hat noch nicht begonnen</p>';
+  }
+
+  const ds = fd(g.local_date);
+  const statusBadge = live ? '<span style="color:var(--accent-red);font-weight:800;animation:pulse 1s infinite">LIVE</span>' : fin ? '&#10003; Beendet' : 'Bevorstehend';
+  const matchType = g.type === 'group' ? 'Gruppe ' + g.group : 
+                    g.type === 'r32' ? '16tel-Finale' : 
+                    g.type === 'r16' ? 'Achtelfinale' : 
+                    g.type === 'qf' ? 'Viertelfinale' : 
+                    g.type === 'sf' ? 'Halbfinale' : 
+                    g.type === 'third' ? 'Spiel um Platz 3' : 'Finale';
+
+  const content = '<div class="modal-header"><span class="modal-title">' + matchType + '</span><button class="modal-close" onclick="closeModal()">&#x2715;</button></div><div class="modal-body" style="text-align:center;"><div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:1rem;text-transform:uppercase;letter-spacing:0.05em;">' + ds + ' &middot; ' + statusBadge + '</div><div style="display:flex;align-items:center;justify-content:center;gap:1.5rem;margin:1.5rem 0;"><div ' + (ht ? 'onclick="closeModal(); setTimeout(()=>openCountryModal(''+ht.id+''), 250)" style="cursor:pointer;flex:1;text-align:right;"' : 'style="flex:1;text-align:right;"') + ' class="match-detail-team"><span style="font-size:1.1rem;font-weight:700;margin-right:0.75rem;vertical-align:middle;color:var(--text-primary);">' + hn + '</span>' + (hf ? '<img src="' + hf + '" style="width:45px;height:30px;object-fit:cover;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.2);vertical-align:middle;" alt="">' : '') + '</div><div style="background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-md);padding:0.5rem 1rem;font-size:1.8rem;font-weight:900;letter-spacing:0.05em;color:var(--text-primary);min-width:90px;text-align:center;">' + (fin || live ? g.home_score + ' : ' + g.away_score : 'vs') + '</div><div ' + (at ? 'onclick="closeModal(); setTimeout(()=>openCountryModal(''+at.id+''), 250)" style="cursor:pointer;flex:1;text-align:left;"' : 'style="flex:1;text-align:left;"') + ' class="match-detail-team">' + (af ? '<img src="' + af + '" style="width:45px;height:30px;object-fit:cover;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.2);vertical-align:middle;" alt="">' : '') + '<span style="font-size:1.1rem;font-weight:700;margin-left:0.75rem;vertical-align:middle;color:var(--text-primary);">' + an + '</span></div></div>' + scorersHtml + (g.stadium_id && g.stadium_id !== 'null' ? '<div style="margin-top:1.5rem;font-size:0.72rem;color:var(--text-muted);">Stadion ID: ' + g.stadium_id + '</div>' : '') + '</div>';
+  showModal(content);
 }
 
 function renderBracket() {
@@ -389,10 +468,59 @@ function renderBracket() {
     if(s[0]) gw[g.name]=s[0].team_id;
     if(s[1]) gr[g.name]=s[1].team_id;
   });
+
+  const thirds = [];
+  S.groups.forEach(g => {
+    const sorted = sortTeams(g);
+    if(sorted[2]) {
+      const t = sorted[2];
+      thirds.push({
+        team_id: t.team_id,
+        group: g.name,
+        pts: parseInt(t.pts) || 0,
+        gd: parseInt(t.gd) || 0,
+        gf: parseInt(t.gf) || 0
+      });
+    }
+  });
+  thirds.sort((a,b) => {
+    if (b.pts !== a.pts) return b.pts - a.pts;
+    if (b.gd !== a.gd) return b.gd - a.gd;
+    return b.gf - a.gf;
+  });
+  const top8 = thirds.slice(0, 8);
+
+  thirdAssignments = {};
+  const assignedThirds = new Set();
+  const thirdSlots = {
+    '74': ['A', 'B', 'C', 'D', 'F'],
+    '77': ['C', 'D', 'F', 'G', 'H'],
+    '79': ['C', 'E', 'F', 'H', 'I'],
+    '80': ['E', 'H', 'I', 'J', 'K'],
+    '81': ['B', 'E', 'F', 'I', 'J'],
+    '82': ['A', 'E', 'H', 'I', 'J'],
+    '85': ['E', 'F', 'G', 'I', 'J'],
+    '87': ['D', 'E', 'I', 'J', 'L']
+  };
+  Object.keys(thirdSlots).sort((a,b) => parseInt(a) - parseInt(b)).forEach(gameId => {
+    const allowed = thirdSlots[gameId];
+    const match = top8.find(t => allowed.includes(t.group) && !assignedThirds.has(t.team_id));
+    if (match) {
+      assignedThirds.add(match.team_id);
+      thirdAssignments[gameId] = match.team_id;
+    } else {
+      const fallback = top8.find(t => !assignedThirds.has(t.team_id));
+      if (fallback) {
+        assignedThirds.add(fallback.team_id);
+        thirdAssignments[gameId] = fallback.team_id;
+      }
+    }
+  });
+
   const byType = type => S.games.filter(g=>g.type===type).sort((a,b)=>parseInt(a.id)-parseInt(b.id));
   const rounds = [
-    {label:'Runde der 32', games:byType('r32')},
-    {label:'Runde der 16', games:byType('r16')},
+    {label:'16tel-Finale', games:byType('r32')},
+    {label:'Achtelfinale', games:byType('r16')},
     {label:'Viertelfinale', games:byType('qf')},
     {label:'Halbfinale', games:byType('sf')},
     {label:'3. Platz / Finale', games:[...byType('third'),...byType('final')]}
@@ -408,20 +536,22 @@ function renderBracket() {
   c.innerHTML = html;
 }
 
-function resolveTeam(id, label, gw, gr) {
+function resolveTeam(id, label, gw, gr, gameId) {
   if(id&&id!=='0') return id;
   if(!label) return null;
   const wm = label.match(/Winner Group ([A-L])/);
   if(wm) return gw[wm[1]]||null;
   const rm = label.match(/Runner-up Group ([A-L])/);
   if(rm) return gr[rm[1]]||null;
+  const tm = label.match(/3rd Group/);
+  if(tm && gameId) return thirdAssignments[gameId]||null;
   return null;
 }
 
 function renderBracketMatch(game, gw, gr) {
   const fin = game.finished==='TRUE';
-  const htid = resolveTeam(game.home_team_id, game.home_team_label, gw, gr);
-  const atid = resolveTeam(game.away_team_id, game.away_team_label, gw, gr);
+  const htid = resolveTeam(game.home_team_id, game.home_team_label, gw, gr, game.id);
+  const atid = resolveTeam(game.away_team_id, game.away_team_label, gw, gr, game.id);
   const ht = htid?S.teams[htid]:null, at = atid?S.teams[atid]:null;
   const hw = fin&&parseInt(game.home_score)>parseInt(game.away_score);
   const aw = fin&&parseInt(game.away_score)>parseInt(game.home_score);
@@ -439,7 +569,7 @@ function renderBracketMatch(game, gw, gr) {
       +(fin?'<span class="bracket-team-score">'+score+'</span>':'')
       +'</div>';
   };
-  return '<div class="bracket-match">'
+  return '<div class="bracket-match" onclick="openMatchDetailModal(''+game.id+'')" style="cursor:pointer">'
     +teamRow(ht,game.home_team_label,game.home_score,hw,fin&&!hw,isPredH)
     +teamRow(at,game.away_team_label,game.away_score,aw,fin&&!aw,isPredA)
     +'<div class="bracket-meta">'+(fin?'&#10003; Gespielt':'&#128197; '+ds)+'</div>'
@@ -457,14 +587,13 @@ function renderMatches() {
     const gs = byDate[date];
     html += '<div class="matchday-section"><div class="matchday-header"><span class="matchday-title">'+fdf(date)+'</span><span class="matchday-date">'+gs.length+' Spiele</span></div>'+gs.map(g=>renderMatchCard(g)).join('')+'</div>';
   });
-  const koTypes = [['r32','Runde der 32'],['r16','Runde der 16'],['qf','Viertelfinale'],['sf','Halbfinale'],['third','Spiel um Platz 3'],['final','&#127942; Finale']];
+  const koTypes = [['r32','16tel-Finale'],['r16','Achtelfinale'],['qf','Viertelfinale'],['sf','Halbfinale'],['third','Spiel um Platz 3'],['final','&#127942; Finale']];
   koTypes.forEach(([type,label]) => {
     const gs = S.games.filter(g=>g.type===type).sort((a,b)=>parseInt(a.id)-parseInt(b.id));
     if(!gs.length) return;
     html += '<div class="section-header" style="margin-top:2rem"><span class="section-title">'+label+'</span><span class="section-count">'+gs.length+' Spiele</span></div>'+gs.map(g=>renderMatchCard(g)).join('');
   });
   c.innerHTML = html;
-  c.querySelectorAll('.match-card[data-tid]').forEach(card => card.addEventListener('click', () => openCountryModal(card.dataset.tid)));
 }
 
 function renderMatchCard(g) {
@@ -475,14 +604,11 @@ function renderMatchCard(g) {
   const fin = g.finished==='TRUE', live = g.time_elapsed&&g.time_elapsed!=='notstarted'&&g.time_elapsed!=='finished';
   const hw = fin&&parseInt(g.home_score)>parseInt(g.away_score), aw = fin&&parseInt(g.away_score)>parseInt(g.home_score);
   const ds = fd(g.local_date);
-  return '<div class="match-card'+(live?' match-live':'')+'"'+(ht?' data-tid="'+ht.id+'" style="cursor:pointer"':'')+'>\
-<div class="match-card-team">'
+  return '<div class="match-card'+(live?' match-live':'')+'" onclick="openMatchDetailModal(''+g.id+'')" style="cursor:pointer"><div class="match-card-team">'
 +(hf?'<img class="match-card-flag" src="'+hf+'" alt="" loading="lazy">':'')
-+'<span class="match-card-name" style="'+(hw?'color:var(--accent-green)':'')+'">'+hn+'</span></div>\
-<div class="match-card-center">'+(fin||live?'<span class="match-card-score">'+g.home_score+' : '+g.away_score+'</span>':'<span class="match-card-score" style="color:var(--text-muted);font-size:1rem">vs</span>')
++'<span class="match-card-name" style="'+(hw?'color:var(--accent-green)':'')+'">'+hn+'</span></div><div class="match-card-center">'+(fin||live?'<span class="match-card-score">'+g.home_score+' : '+g.away_score+'</span>':'<span class="match-card-score" style="color:var(--text-muted);font-size:1rem">vs</span>')
 +'<span class="match-card-info">'+(live?'<span style="color:var(--accent-red);font-weight:700">LIVE</span>':fin?'&#10003; Beendet':ds)+'</span>'
-+(g.type==='group'?'<span class="group-tag">Gr. '+g.group+'</span>':'')+'</div>\
-<div class="match-card-team right">'
++(g.type==='group'?'<span class="group-tag">Gr. '+g.group+'</span>':'')+'</div><div class="match-card-team right">'
 +(af?'<img class="match-card-flag" src="'+af+'" alt="" loading="lazy">':'')
 +'<span class="match-card-name" style="'+(aw?'color:var(--accent-green)':'')+'">'+an+'</span></div></div>';
 }
