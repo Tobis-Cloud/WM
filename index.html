@@ -14,7 +14,7 @@
   <meta name="apple-mobile-web-app-title" content="FIFA WM 2026" />
   
   <!-- HTML2Canvas for PNG Export -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -841,6 +841,7 @@
 <script>
 const API = 'https://worldcup26.ir/get';
 let S = { teams:{}, groups:[], games:[], loaded:false };
+let flagCache = {};
 let thirdAssignments = {};
 let showOldGames = false;
 let updateIntervalId = null;
@@ -1294,61 +1295,227 @@ function handleSwipe() {
   }
 }
 
+async function fetchImageAsDataUri(url) {
+  if (!url) return null;
+  try {
+    const res = await fetch(url);
+    if (res.ok) {
+      const blob = await res.blob();
+      return await blobToDataURL(blob);
+    }
+  } catch (e) {
+    // Fehler ignorieren und Proxy versuchen
+  }
+  
+  const proxies = [
+    u => 'https://corsproxy.io/?url=' + encodeURIComponent(u),
+    u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u)
+  ];
+  for (const proxy of proxies) {
+    try {
+      const res = await fetch(proxy(url));
+      if (res.ok) {
+        const blob = await res.blob();
+        return await blobToDataURL(blob);
+      }
+    } catch (e) {
+      // Fehler ignorieren
+    }
+  }
+  return null;
+}
+
+function blobToDataURL(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function preloadFlags() {
+  if (!S.teams) return;
+  const teams = Object.values(S.teams);
+  const promises = teams.map(async (team) => {
+    if (team.flag && !flagCache[team.flag]) {
+      try {
+        const dataUri = await fetchImageAsDataUri(team.flag);
+        if (dataUri) {
+          flagCache[team.flag] = dataUri;
+        }
+      } catch (e) {
+        // Fehler im Hintergrund ignorieren
+      }
+    }
+  });
+  await Promise.all(promises);
+}
+
 async function exportBracketToPng() {
-  const container = document.getElementById('bracketContainer');
+  const container = document.querySelector('.bracket-container');
   const btn = document.querySelector('.export-btn');
-  if (!container) return;
+  if (!container) {
+    alert("Spielbaum-Element nicht gefunden.");
+    return;
+  }
   
   const originalText = btn.innerHTML;
-  btn.innerHTML = '⏳ Generiere...';
+  btn.innerHTML = '⏳ Bereite Export vor...';
   btn.disabled = true;
+  
+  // Scroll-Position zurücksetzen, um Versatz-Fehler in html2canvas zu vermeiden
+  const scrollContainer = document.querySelector('.bracket-scroll');
+  const originalScrollLeft = scrollContainer ? scrollContainer.scrollLeft : 0;
+  if (scrollContainer) {
+    scrollContainer.scrollLeft = 0;
+  }
   
   try {
     if (typeof html2canvas === 'undefined') {
-      throw new Error("Export-Bibliothek wird noch geladen. Bitte kurz warten und erneut versuchen.");
+      throw new Error("Die Export-Bibliothek (html2canvas) wird noch geladen. Bitte lade die Seite neu.");
     }
     
-    const scrollWidth = container.scrollWidth;
-    const scrollHeight = container.scrollHeight;
+    // Linien frisch zeichnen, da Scroll auf 0 steht
+    drawBracketLines();
     
-    const originalWidth = container.style.width;
-    const originalMax = container.style.maxWidth;
-    const originalOverflow = container.style.overflowX;
+    // Alle aktuell angezeigten Flaggen-URLs identifizieren
+    const imgs = container.querySelectorAll('.bracket-team-flag');
+    const urlsToFetch = [];
+    imgs.forEach(img => {
+      const src = img.getAttribute('src');
+      if (src && !flagCache[src]) {
+        urlsToFetch.push(src);
+      }
+    });
     
-    container.style.width = scrollWidth + 'px';
-    container.style.maxWidth = 'none';
-    container.style.overflowX = 'visible';
+    // Fehlende Flaggen on-the-fly nachladen (z.B. falls Preloading noch läuft oder offline)
+    if (urlsToFetch.length > 0) {
+      btn.innerHTML = '⏳ Lade Flaggen...';
+      const uniqueUrls = Array.from(new Set(urlsToFetch));
+      await Promise.all(uniqueUrls.map(async (url) => {
+        try {
+          const dataUri = await fetchImageAsDataUri(url);
+          if (dataUri) {
+            flagCache[url] = dataUri;
+          }
+        } catch (e) {
+          console.warn("Fehler beim Laden der Flagge für Export:", url, e);
+        }
+      }));
+    }
+    
+    btn.innerHTML = '⏳ Generiere PNG...';
+    
+    const width = container.offsetWidth;
+    const height = container.offsetHeight;
     
     const canvas = await html2canvas(container, {
       backgroundColor: '#0a0e1a',
-      logging: false,
       useCORS: true,
+      allowTaint: false,
       scale: 2,
-      width: scrollWidth,
-      height: scrollHeight,
+      width: width,
+      height: height,
       scrollX: 0,
       scrollY: 0,
-      windowWidth: scrollWidth,
-      windowHeight: scrollHeight
+      windowWidth: width,
+      windowHeight: height,
+      onclone: (clonedDoc) => {
+        // Ersetze alle Flaggen-Bilder mit ihren Base64 Data URIs aus dem Cache
+        clonedDoc.querySelectorAll('.bracket-team-flag').forEach(img => {
+          const src = img.getAttribute('src');
+          let found = false;
+          if (src) {
+            for (const url in flagCache) {
+              if (src === url || src.endsWith(url) || url.endsWith(src)) {
+                img.src = flagCache[url];
+                found = true;
+                break;
+              }
+            }
+          }
+          if (!found) {
+            // Wenn die Flagge nicht geladen werden konnte, löschen wir das Element,
+            // um ein Tainting des Canvas unter allen Umständen zu verhindern!
+            img.remove();
+          }
+        });
+      }
     });
     
-    container.style.width = originalWidth;
-    container.style.maxWidth = originalMax;
-    container.style.overflowX = originalOverflow;
-    
     const dataUrl = canvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.download = 'wm2026-spielbaum.png';
-    link.href = dataUrl;
-    link.click();
+    triggerDownload(dataUrl);
+    
+    // Zeige auf Mobilgeräten zusätzlich ein Modal mit dem Bild zur manuellen Speicherung
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      showExportModal(dataUrl);
+    }
     
   } catch (e) {
-    alert("Export fehlgeschlagen: " + e.message);
-    console.error(e);
+    console.error("Export-Fehler:", e);
+    // Fallback: Fehlerresistenter Export ganz ohne Flaggen
+    try {
+      btn.innerHTML = '⏳ Versuche Fallback...';
+      const width = container.offsetWidth;
+      const height = container.offsetHeight;
+      const canvasFallback = await html2canvas(container, {
+        backgroundColor: '#0a0e1a',
+        useCORS: false,
+        allowTaint: false,
+        scale: 2,
+        width: width,
+        height: height,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: width,
+        windowHeight: height,
+        onclone: (clonedDoc) => {
+          clonedDoc.querySelectorAll('.bracket-team-flag').forEach(img => img.remove());
+        }
+      });
+      const dataUrl = canvasFallback.toDataURL('image/png');
+      triggerDownload(dataUrl);
+      
+      if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        showExportModal(dataUrl);
+      }
+    } catch (fallbackErr) {
+      alert("Export fehlgeschlagen: " + fallbackErr.message);
+      console.error("Fallback-Export-Fehler:", fallbackErr);
+    }
   } finally {
+    if (scrollContainer) {
+      scrollContainer.scrollLeft = originalScrollLeft;
+    }
+    drawBracketLines();
     btn.innerHTML = originalText;
     btn.disabled = false;
   }
+}
+
+function triggerDownload(dataUrl) {
+  const link = document.createElement('a');
+  link.download = 'wm2026-spielbaum.png';
+  link.href = dataUrl;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function showExportModal(dataUrl) {
+  showModal(`
+    <div class="modal-header">
+      <span class="modal-title">📷 Spielbaum Exportiert</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" style="text-align: center;">
+      <p style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-secondary);">
+        Dein Spielbaum wurde generiert. Falls der automatische Download auf deinem Gerät nicht gestartet ist, halte das Bild gedrückt, um es zu speichern:
+      </p>
+      <img src="${dataUrl}" alt="WM 2026 Spielbaum" style="max-width: 100%; height: auto; border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-card);" />
+    </div>
+  `);
 }
 
 async function fetchData(url) {
@@ -1395,6 +1562,7 @@ async function loadAllData() {
     if(el) el.textContent = 'Zuletzt: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
     renderGroups(); renderBracket(); renderMatches(); renderTeams(); renderGermanyDashboard();
     startAutoUpdate();
+    preloadFlags();
   } catch(e) {
     console.error(e);
     ['groupsContainer','bracketContainer','matchesContainer','teamsContainer','germanyDashboardContainer'].forEach(id => {
