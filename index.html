@@ -1297,29 +1297,43 @@ function handleSwipe() {
 
 async function fetchImageAsDataUri(url) {
   if (!url) return null;
-  try {
-    const res = await fetch(url);
-    if (res.ok) {
-      const blob = await res.blob();
-      return await blobToDataURL(blob);
+  
+  const fetchWithTimeout = async (targetUrl) => {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 2000); // 2 Sek. Timeout
+    try {
+      const res = await fetch(targetUrl, { signal: controller.signal });
+      clearTimeout(id);
+      if (res.ok) {
+        const blob = await res.blob();
+        return await blobToDataURL(blob);
+      }
+    } catch (e) {
+      clearTimeout(id);
+      throw e;
     }
+    return null;
+  };
+
+  // 1. Direkt versuchen
+  try {
+    const dataUri = await fetchWithTimeout(url);
+    if (dataUri) return dataUri;
   } catch (e) {
-    // Fehler ignorieren und Proxy versuchen
+    // ignorieren, Proxy versuchen
   }
   
+  // 2. Proxys versuchen
   const proxies = [
     u => 'https://corsproxy.io/?url=' + encodeURIComponent(u),
     u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u)
   ];
   for (const proxy of proxies) {
     try {
-      const res = await fetch(proxy(url));
-      if (res.ok) {
-        const blob = await res.blob();
-        return await blobToDataURL(blob);
-      }
+      const dataUri = await fetchWithTimeout(proxy(url));
+      if (dataUri) return dataUri;
     } catch (e) {
-      // Fehler ignorieren
+      // ignorieren
     }
   }
   return null;
@@ -1364,6 +1378,8 @@ async function exportBracketToPng() {
   btn.innerHTML = '⏳ Bereite Export vor...';
   btn.disabled = true;
   
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
   // Scroll-Position zurücksetzen, um Versatz-Fehler in html2canvas zu vermeiden
   const scrollContainer = document.querySelector('.bracket-scroll');
   const originalScrollLeft = scrollContainer ? scrollContainer.scrollLeft : 0;
@@ -1371,13 +1387,25 @@ async function exportBracketToPng() {
     scrollContainer.scrollLeft = 0;
   }
   
+  // Linien frisch zeichnen, da Scroll auf 0 steht
+  drawBracketLines();
+  
+  // SVG-Element sichern und vorübergehend auf Mobilgeräten entfernen (verhindert Hänger unter iOS Safari)
+  const svg = document.getElementById('bracketSvg');
+  const svgParent = svg ? svg.parentNode : null;
+  const svgNextSibling = svg ? svg.nextSibling : null;
+  
+  if (isMobile && svg) {
+    svg.remove();
+  }
+  
+  // Pause für ein Render-Frame (50ms), damit der Browser das Layout nach dem Scrollen und Entfernen neu berechnen kann
+  await new Promise(resolve => setTimeout(resolve, 50));
+  
   try {
     if (typeof html2canvas === 'undefined') {
       throw new Error("Die Export-Bibliothek (html2canvas) wird noch geladen. Bitte lade die Seite neu.");
     }
-    
-    // Linien frisch zeichnen, da Scroll auf 0 steht
-    drawBracketLines();
     
     // Alle aktuell angezeigten Flaggen-URLs identifizieren
     const imgs = container.querySelectorAll('.bracket-team-flag');
@@ -1407,20 +1435,23 @@ async function exportBracketToPng() {
     
     btn.innerHTML = '⏳ Generiere PNG...';
     
+    const scale = isMobile ? 1 : 2; // Auf Mobilgeräten geringere Skalierung wegen Speicherlimits von Safari
     const width = container.offsetWidth;
     const height = container.offsetHeight;
     
     const canvas = await html2canvas(container, {
       backgroundColor: '#0a0e1a',
-      useCORS: true,
+      useCORS: false, // Wichtig für file://-Protokoll und Safari, verhindert unendliche CORS-Hänger
       allowTaint: false,
-      scale: 2,
+      scale: scale,
       width: width,
       height: height,
       scrollX: 0,
       scrollY: 0,
       windowWidth: width,
       windowHeight: height,
+      imageTimeout: 3000, // Timeout nach 3 Sek, falls Safari beim Laden hakt
+      logging: false,
       onclone: (clonedDoc) => {
         // Ersetze alle Flaggen-Bilder mit ihren Base64 Data URIs aus dem Cache
         clonedDoc.querySelectorAll('.bracket-team-flag').forEach(img => {
@@ -1448,36 +1479,42 @@ async function exportBracketToPng() {
     triggerDownload(dataUrl);
     
     // Zeige auf Mobilgeräten zusätzlich ein Modal mit dem Bild zur manuellen Speicherung
-    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+    if (isMobile) {
       showExportModal(dataUrl);
     }
     
   } catch (e) {
     console.error("Export-Fehler:", e);
-    // Fallback: Fehlerresistenter Export ganz ohne Flaggen
+    // Fallback: Fehlerresistenter Export ganz ohne Flaggen und ohne SVG-Element (wichtig bei iOS Safari Renderfehlern)
     try {
       btn.innerHTML = '⏳ Versuche Fallback...';
+      const scale = isMobile ? 1 : 2;
       const width = container.offsetWidth;
       const height = container.offsetHeight;
       const canvasFallback = await html2canvas(container, {
         backgroundColor: '#0a0e1a',
         useCORS: false,
         allowTaint: false,
-        scale: 2,
+        scale: scale,
         width: width,
         height: height,
         scrollX: 0,
         scrollY: 0,
         windowWidth: width,
         windowHeight: height,
+        imageTimeout: 3000,
+        logging: false,
         onclone: (clonedDoc) => {
+          // Komplett säubern
           clonedDoc.querySelectorAll('.bracket-team-flag').forEach(img => img.remove());
+          const svgEl = clonedDoc.getElementById('bracketSvg');
+          if (svgEl) svgEl.remove(); // Verhindert SVG-Hänger/Fehler unter iOS Safari
         }
       });
       const dataUrl = canvasFallback.toDataURL('image/png');
       triggerDownload(dataUrl);
       
-      if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      if (isMobile) {
         showExportModal(dataUrl);
       }
     } catch (fallbackErr) {
@@ -1485,6 +1522,10 @@ async function exportBracketToPng() {
       console.error("Fallback-Export-Fehler:", fallbackErr);
     }
   } finally {
+    // SVG auf Mobilgeräten wieder in das echte DOM einhängen
+    if (isMobile && svg && svgParent) {
+      svgParent.insertBefore(svg, svgNextSibling);
+    }
     if (scrollContainer) {
       scrollContainer.scrollLeft = originalScrollLeft;
     }
