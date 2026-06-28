@@ -770,6 +770,304 @@
         display: none !important;
       }
     }
+    
+    /* Flag Game Styles */
+    .game-setup-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      max-width: 500px;
+      margin: 2rem auto;
+      text-align: center;
+      box-shadow: var(--shadow-card);
+      animation: fadeIn 0.4s ease;
+    }
+    .game-setup-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--accent-gold), var(--accent-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .game-select-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    .game-select {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 0.75rem 1.25rem;
+      border-radius: var(--radius-sm);
+      width: 100%;
+      font-family: inherit;
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .game-select:focus {
+      border-color: var(--accent-blue);
+    }
+    .game-btn {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      color: #fff;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 50px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .game-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+    }
+    .game-container {
+      max-width: 600px;
+      margin: 0 auto;
+      animation: fadeIn 0.4s ease;
+    }
+    .game-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1.25rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: 1.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .game-flag-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .game-flag-card.success {
+      border-color: var(--accent-green);
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+    }
+    .game-flag-card.error {
+      border-color: var(--accent-red);
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+      animation: shake 0.4s ease;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    .game-flag-img {
+      width: 100%;
+      max-width: 320px;
+      height: 200px;
+      object-fit: contain;
+      border-radius: var(--radius-sm);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      background: #111827;
+      margin-bottom: 1rem;
+      transition: transform 0.3s ease;
+    }
+    @media (max-width: 480px) {
+      .game-flag-img {
+        max-width: 100%;
+        height: 160px;
+      }
+    }
+    .game-input-container {
+      width: 100%;
+      position: relative;
+    }
+    .game-input {
+      width: 100%;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 0.85rem 1.25rem;
+      border-radius: var(--radius-md);
+      font-size: 1.05rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .game-input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.15);
+    }
+    .game-suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius-md);
+      margin-top: 0.25rem;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 100;
+      box-shadow: var(--shadow-hover);
+      display: none;
+    }
+    .game-suggestion-item {
+      padding: 0.75rem 1.25rem;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: background 0.2s, color 0.2s;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+    .game-suggestion-item:last-child {
+      border-bottom: none;
+    }
+    .game-suggestion-item:hover, .game-suggestion-item.selected {
+      background: var(--bg-card-hover);
+      color: var(--accent-blue);
+    }
+    .game-feedback {
+      margin-top: 1.25rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      min-height: 24px;
+      text-align: center;
+      transition: all 0.2s;
+      opacity: 0;
+      transform: translateY(5px);
+    }
+    .game-feedback.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .game-feedback.correct {
+      color: var(--accent-green);
+    }
+    .game-feedback.incorrect {
+      color: var(--accent-red);
+    }
+    .game-actions {
+      display: flex;
+      gap: 1rem;
+      width: 100%;
+      margin-top: 1.5rem;
+    }
+    .game-actions button {
+      flex: 1;
+      padding: 0.85rem;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+    .game-actions button:active {
+      transform: scale(0.98);
+    }
+    .game-btn-check {
+      background: var(--accent-blue);
+      color: #fff;
+    }
+    .game-btn-next {
+      background: var(--accent-gold);
+      color: #0a0e1a;
+      display: none;
+    }
+    .game-btn-quit {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border) !important;
+      color: var(--text-secondary);
+    }
+    .game-btn-quit:hover {
+      background: var(--accent-red-dim);
+      color: var(--accent-red);
+      border-color: rgba(239,68,68,0.3) !important;
+    }
+    .certificate-card {
+      background: var(--bg-card);
+      border: 2px solid var(--accent-gold);
+      border-radius: var(--radius-xl);
+      padding: 3rem 2rem;
+      max-width: 500px;
+      margin: 2rem auto;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 10px 40px rgba(245, 200, 66, 0.15);
+      animation: zoomIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      overflow: hidden;
+    }
+    @keyframes zoomIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    #confettiCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+    .certificate-emblem {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+      filter: drop-shadow(0 4px 10px rgba(245, 200, 66, 0.4));
+      animation: bounceEmblem 2s infinite ease-in-out;
+    }
+    @keyframes bounceEmblem {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .certificate-title {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: var(--accent-gold);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .certificate-subtitle {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+    }
+    .certificate-rank {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+    }
+    .certificate-score {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      margin-bottom: 2.5rem;
+    }
+    .certificate-score strong {
+      color: var(--accent-blue);
+      font-size: 1.3rem;
+    }
   </style>
 </head>
 <body>
@@ -790,6 +1088,7 @@
   <button class="mobile-nav-item" data-tab="bracket" onclick="selectMobileTab('bracket')"><span>&#127942; KO-Runden</span></button>
   <button class="mobile-nav-item" data-tab="matches" onclick="selectMobileTab('matches')"><span>&#128197; Alle Spiele</span></button>
   <button class="mobile-nav-item" data-tab="teams" onclick="selectMobileTab('teams')"><span>&#127937; Teams</span></button>
+  <button class="mobile-nav-item" data-tab="flagGame" onclick="selectMobileTab('flagGame')"><span>🏁 Flaggen raten</span></button>
   <button class="refresh-btn" id="mobileRefreshBtn" onclick="loadAllData(); toggleMobileMenu();" style="width: 100%; margin-top: auto; padding: 0.75rem; border-radius: 50px; font-size: 0.875rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer;">
     &#8635; Live-Daten aktualisieren
   </button>
@@ -801,6 +1100,7 @@
   <button class="tab-btn" data-tab="bracket" id="tabBracket"><span>&#127942; KO-Runden</span></button>
   <button class="tab-btn" data-tab="matches" id="tabMatches"><span>&#128197; Alle Spiele</span></button>
   <button class="tab-btn" data-tab="teams" id="tabTeams"><span>&#127937; Teams</span></button>
+  <button class="tab-btn" data-tab="flagGame" id="tabFlagGame"><span>🏁 Flaggen raten</span></button>
 </nav>
 
 <main>
@@ -832,6 +1132,14 @@
     </div>
     <div id="germanyDashboardContainer">
       <div class="loading-screen"><div class="spinner"></div><p class="loading-text">Lade Dashboard&hellip;</p></div>
+    </div>
+  </div>
+  <div class="view" id="viewFlagGame">
+    <div class="status-bar">
+      <div class="status-live"><span class="live-dot" style="background:var(--accent-blue)"></span><span>🏁 Flaggen-Raten &middot; Zeige deine WM-Expertise</span></div>
+    </div>
+    <div id="flagGameContainer">
+      <div class="loading-screen"><div class="spinner"></div><p class="loading-text">Lade Spieldaten&hellip;</p></div>
     </div>
   </div>
 </main>
@@ -1215,6 +1523,12 @@ function calculatePlayerGoals() {
 }
 
 function switchTab(t) {
+  // Cancel active confetti animation to prevent background CPU usage
+  if (window.currentConfettiAnimation) {
+    cancelAnimationFrame(window.currentConfettiAnimation);
+    window.currentConfettiAnimation = null;
+  }
+
   document.querySelectorAll('.tab-btn').forEach(x => {
     x.classList.remove('active');
     if (x.dataset.tab === t) x.classList.add('active');
@@ -1234,6 +1548,11 @@ function switchTab(t) {
   }
   if (t === 'matches') {
     setTimeout(scrollToCurrentDay, 100);
+  }
+  if (t === 'flagGame') {
+    if (!game.active) {
+      initFlagGame();
+    }
   }
 }
 
@@ -2717,6 +3036,524 @@ function renderGermanyDashboard() {
   
   html += '</div>';
   container.innerHTML = html;
+}
+
+// ==========================================
+// Flag Game Logic
+// ==========================================
+let game = {
+  active: false,
+  roundCount: 10,
+  currentRound: 0,
+  score: 0,
+  streak: 0,
+  bestStreak: 0,
+  roundsToPlay: [],
+  currentTeam: null,
+  answered: false
+};
+
+const COUNTRY_ALIASES = {
+  'United States': ['usa', 'united states of america', 'us', 'vereinigte staaten', 'vereinigte staaten von amerika', 'amerik'],
+  'Mexico': ['mexiko', 'mexico'],
+  'South Korea': ['korea', 'südkorea', 'süd-korea', 'south korea'],
+  'Canada': ['kanada', 'canada'],
+  'Bosnia and Herzegovina': ['bosnien', 'herzegowina', 'bosnien-herzegowina', 'bosnien und herzegowina'],
+  'Czech Republic': ['tschechien', 'tschechische republik'],
+  'Morocco': ['marokko', 'morocco'],
+  'Brazil': ['brasilien', 'brazil'],
+  'Switzerland': ['schweiz', 'switzerland'],
+  'Sweden': ['schweden', 'sweden'],
+  'Turkey': ['türkei', 'turkey'],
+  'Croatia': ['kroatien', 'croatia'],
+  'Germany': ['deutschland', 'germany', 'de'],
+  'Netherlands': ['niederlande', 'holland', 'netherlands'],
+  'Spain': ['spanien', 'spain'],
+  'Saudi Arabia': ['saudi-arabien', 'saudi arabien', 'saudi arabia'],
+  'Argentina': ['argentinien', 'argentina'],
+  'Algeria': ['algerien', 'algeria'],
+  'Austria': ['österreich', 'austria'],
+  'Colombia': ['kolumbien', 'colombia'],
+  'Ivory Coast': ['elfenbeinküste', 'ivory coast', 'cote d\'ivoire', 'cote divoire'],
+  'DR Kongo': ['kongo', 'demokratische republik kongo', 'dr kongo', 'dr congo', 'congo'],
+  'Democratic Republic of the Congo': ['kongo', 'demokratische republik kongo', 'dr kongo', 'dr congo', 'congo']
+};
+
+let activeSuggestionIndex = -1;
+
+function initFlagGame() {
+  renderGameSetup();
+}
+
+function renderGameSetup() {
+  const container = document.getElementById('viewFlagGame');
+  if (!container) return;
+  
+  const savedBest = localStorage.getItem('wm2026_best_streak') || 0;
+  game.bestStreak = parseInt(savedBest);
+  
+  container.innerHTML = `
+    <div class="status-bar">
+      <div class="status-live"><span class="live-dot" style="background:var(--accent-blue)"></span><span>🏁 Flaggen-Raten &middot; Zeige deine WM-Expertise</span></div>
+    </div>
+    <div class="game-setup-card">
+      <div class="certificate-emblem">🏁</div>
+      <h2 class="game-setup-title">Flaggen-Raten</h2>
+      <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:1.5rem;">Erkenne die Flaggen aller 48 Nationen der FIFA WM 2026!</p>
+      
+      <div style="text-align:left; max-width:300px; margin:0 auto;">
+        <label class="game-select-label" for="roundsSelect">Anzahl der Flaggen:</label>
+        <select id="roundsSelect" class="game-select">
+          <option value="5">5 Flaggen</option>
+          <option value="10" selected>10 Flaggen</option>
+          <option value="20">20 Flaggen</option>
+          <option value="48">Alle 48 Flaggen</option>
+          <option value="infinite">Endlos-Modus</option>
+        </select>
+      </div>
+      
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">
+        Persönliche Bestleistung (Serie): <strong>${game.bestStreak}</strong>
+      </div>
+      
+      <button class="game-btn" onclick="startFlagGame()">Spiel starten</button>
+    </div>
+  `;
+}
+
+function startFlagGame() {
+  if (!S.loaded || !S.teams) {
+    alert("Nationen-Daten sind noch nicht geladen. Bitte lade die Seite neu.");
+    return;
+  }
+  
+  const select = document.getElementById('roundsSelect');
+  const mode = select ? select.value : '10';
+  
+  const allTeams = Object.values(S.teams);
+  if (allTeams.length === 0) {
+    alert("Keine Teams gefunden.");
+    return;
+  }
+  
+  game.active = true;
+  game.score = 0;
+  game.streak = 0;
+  game.currentRound = 0;
+  game.answered = false;
+  
+  if (mode === 'infinite') {
+    game.roundCount = Infinity;
+    game.roundsToPlay = shuffleArray([...allTeams]);
+  } else {
+    game.roundCount = parseInt(mode);
+    const shuffled = shuffleArray([...allTeams]);
+    game.roundsToPlay = shuffled.slice(0, game.roundCount);
+  }
+  
+  nextGameRound();
+}
+
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function nextGameRound() {
+  if (game.currentRound >= game.roundCount) {
+    endFlagGame();
+    return;
+  }
+  
+  if (game.roundCount === Infinity && game.currentRound >= game.roundsToPlay.length) {
+    game.roundsToPlay = shuffleArray(Object.values(S.teams));
+  }
+  
+  const nextIndex = game.roundCount === Infinity ? (game.currentRound % game.roundsToPlay.length) : game.currentRound;
+  game.currentTeam = game.roundsToPlay[nextIndex];
+  game.currentRound++;
+  game.answered = false;
+  
+  renderGameScreen();
+}
+
+function renderGameScreen() {
+  const container = document.getElementById('viewFlagGame');
+  if (!container || !game.currentTeam) return;
+  
+  const roundLabel = game.roundCount === Infinity ? `Flagge ${game.currentRound}` : `Flagge ${game.currentRound} von ${game.roundCount}`;
+  
+  container.innerHTML = `
+    <div class="game-header-bar">
+      <div>🏁 ${roundLabel}</div>
+      <div>Score: <strong style="color:var(--accent-green)">${game.score}</strong> richtig &middot; Serie: <strong style="color:var(--accent-gold)">${game.streak}</strong></div>
+    </div>
+    
+    <div class="game-container">
+      <div class="game-flag-card" id="gameFlagCard">
+        <img class="game-flag-img" src="${game.currentTeam.flag}" alt="Rätsel Flagge" />
+        
+        <div class="game-input-container">
+          <input type="text" id="gameCountryInput" class="game-input" autocomplete="off" placeholder="Land eingeben (z. B. Deutschland, Mexiko...)" oninput="handleGameInput(this)" onkeydown="handleGameKeydown(event)" />
+          <div id="gameSuggestions" class="game-suggestions"></div>
+        </div>
+        
+        <div id="gameFeedback" class="game-feedback"></div>
+        
+        <div class="game-actions">
+          <button class="game-btn-quit" onclick="quitFlagGame()">Abbrechen</button>
+          <button id="gameBtnCheck" class="game-btn-check" onclick="checkGameAnswer()">Prüfen</button>
+          <button id="gameBtnNext" class="game-btn-next" onclick="nextGameRound()">Weiter &#10142;</button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  setTimeout(() => {
+    const input = document.getElementById('gameCountryInput');
+    if (input) input.focus();
+  }, 100);
+}
+
+function handleGameInput(inputEl) {
+  const query = inputEl.value.trim().toLowerCase();
+  const suggestionsContainer = document.getElementById('gameSuggestions');
+  if (!suggestionsContainer) return;
+  
+  if (game.answered) {
+    suggestionsContainer.style.display = 'none';
+    return;
+  }
+  
+  if (query.length < 1) {
+    suggestionsContainer.style.display = 'none';
+    suggestionsContainer.innerHTML = '';
+    activeSuggestionIndex = -1;
+    return;
+  }
+  
+  const allTeams = Object.values(S.teams);
+  const matches = [];
+  
+  allTeams.forEach(team => {
+    const nameDe = tn(team.name_en).toLowerCase();
+    const nameEn = team.name_en.toLowerCase();
+    
+    let isMatch = nameDe.includes(query) || nameEn.includes(query);
+    
+    if (!isMatch && COUNTRY_ALIASES[team.name_en]) {
+      isMatch = COUNTRY_ALIASES[team.name_en].some(alias => alias.includes(query));
+    }
+    
+    if (isMatch) {
+      matches.push(team);
+    }
+  });
+  
+  matches.sort((a, b) => {
+    const aDe = tn(a.name_en).toLowerCase();
+    const bDe = tn(b.name_en).toLowerCase();
+    const aStartsWith = aDe.startsWith(query);
+    const bStartsWith = bDe.startsWith(query);
+    if (aStartsWith && !bStartsWith) return -1;
+    if (!aStartsWith && bStartsWith) return 1;
+    return aDe.localeCompare(bDe);
+  });
+  
+  if (matches.length === 0) {
+    suggestionsContainer.style.display = 'none';
+    suggestionsContainer.innerHTML = '';
+    activeSuggestionIndex = -1;
+    return;
+  }
+  
+  activeSuggestionIndex = -1;
+  suggestionsContainer.style.display = 'block';
+  suggestionsContainer.innerHTML = matches.map((team, idx) => `
+    <div class="game-suggestion-item" data-id="${team.id}" data-index="${idx}" onclick="selectGameSuggestion('${team.id}')">
+      ${tn(team.name_en)}
+    </div>
+  `).join('');
+}
+
+function selectGameSuggestion(teamId) {
+  const team = S.teams[teamId];
+  if (!team) return;
+  
+  const inputEl = document.getElementById('gameCountryInput');
+  if (inputEl) {
+    inputEl.value = tn(team.name_en);
+  }
+  
+  const suggestionsContainer = document.getElementById('gameSuggestions');
+  if (suggestionsContainer) {
+    suggestionsContainer.style.display = 'none';
+    suggestionsContainer.innerHTML = '';
+  }
+  
+  activeSuggestionIndex = -1;
+  checkGameAnswer();
+}
+
+function handleGameKeydown(e) {
+  const suggestionsContainer = document.getElementById('gameSuggestions');
+  if (!suggestionsContainer || suggestionsContainer.style.display === 'none') {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (game.answered) {
+        nextGameRound();
+      } else {
+        checkGameAnswer();
+      }
+    }
+    return;
+  }
+  
+  const items = suggestionsContainer.querySelectorAll('.game-suggestion-item');
+  if (items.length === 0) return;
+  
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    activeSuggestionIndex++;
+    if (activeSuggestionIndex >= items.length) {
+      activeSuggestionIndex = 0;
+    }
+    highlightSuggestion(items);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    activeSuggestionIndex--;
+    if (activeSuggestionIndex < 0) {
+      activeSuggestionIndex = items.length - 1;
+    }
+    highlightSuggestion(items);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (activeSuggestionIndex >= 0 && activeSuggestionIndex < items.length) {
+      const selectedId = items[activeSuggestionIndex].dataset.id;
+      selectGameSuggestion(selectedId);
+    } else {
+      const selectedId = items[0].dataset.id;
+      selectGameSuggestion(selectedId);
+    }
+  } else if (e.key === 'Escape') {
+    suggestionsContainer.style.display = 'none';
+  }
+}
+
+function highlightSuggestion(items) {
+  items.forEach(item => item.classList.remove('selected'));
+  if (activeSuggestionIndex >= 0 && activeSuggestionIndex < items.length) {
+    const activeItem = items[activeSuggestionIndex];
+    activeItem.classList.add('selected');
+    activeItem.scrollIntoView({ block: 'nearest' });
+  }
+}
+
+function levenshtein(a, b) {
+  const tmp = [];
+  let i, j, alen = a.length, blen = b.length, cost;
+  if (alen === 0) return blen;
+  if (blen === 0) return alen;
+  for (i = 0; i <= alen; i++) tmp[i] = [i];
+  for (j = 0; j <= blen; j++) tmp[0][j] = j;
+  for (i = 1; i <= alen; i++) {
+    for (j = 1; j <= blen; j++) {
+      cost = (a.charAt(i - 1) === b.charAt(j - 1)) ? 0 : 1;
+      tmp[i][j] = Math.min(tmp[i - 1][j] + 1, tmp[i][j - 1] + 1, tmp[i - 1][j - 1] + cost);
+    }
+  }
+  return tmp[alen][blen];
+}
+
+function checkGameAnswer() {
+  if (game.answered) return;
+  
+  const inputEl = document.getElementById('gameCountryInput');
+  if (!inputEl) return;
+  
+  const value = inputEl.value.trim();
+  if (value.length === 0) return;
+  
+  game.answered = true;
+  inputEl.disabled = true;
+  
+  const suggestionsContainer = document.getElementById('gameSuggestions');
+  if (suggestionsContainer) suggestionsContainer.style.display = 'none';
+  
+  const card = document.getElementById('gameFlagCard');
+  const feedback = document.getElementById('gameFeedback');
+  const btnCheck = document.getElementById('gameBtnCheck');
+  const btnNext = document.getElementById('gameBtnNext');
+  
+  const cleanVal = value.toLowerCase();
+  const correctDe = tn(game.currentTeam.name_en).toLowerCase();
+  const correctEn = game.currentTeam.name_en.toLowerCase();
+  
+  let isCorrect = cleanVal === correctDe || cleanVal === correctEn;
+  
+  if (!isCorrect) {
+    const maxDistDe = correctDe.length <= 4 ? 0 : correctDe.length <= 8 ? 1 : 2;
+    const maxDistEn = correctEn.length <= 4 ? 0 : correctEn.length <= 8 ? 1 : 2;
+    
+    const distDe = levenshtein(cleanVal, correctDe);
+    const distEn = levenshtein(cleanVal, correctEn);
+    
+    if (distDe <= maxDistDe || distEn <= maxDistEn) {
+      isCorrect = true;
+    }
+  }
+  
+  if (!isCorrect && COUNTRY_ALIASES[game.currentTeam.name_en]) {
+    const aliases = COUNTRY_ALIASES[game.currentTeam.name_en];
+    isCorrect = aliases.some(alias => {
+      const aliasLower = alias.toLowerCase();
+      const maxDist = aliasLower.length <= 4 ? 0 : aliasLower.length <= 8 ? 1 : 2;
+      return cleanVal === aliasLower || levenshtein(cleanVal, aliasLower) <= maxDist;
+    });
+  }
+  
+  if (isCorrect) {
+    game.score++;
+    game.streak++;
+    if (game.streak > game.bestStreak) {
+      game.bestStreak = game.streak;
+      localStorage.setItem('wm2026_best_streak', game.bestStreak);
+    }
+    
+    if (card) card.classList.add('success');
+    if (feedback) {
+      feedback.textContent = 'Richtig! 🎉';
+      feedback.className = 'game-feedback show correct';
+    }
+  } else {
+    game.streak = 0;
+    if (card) card.classList.add('error');
+    if (feedback) {
+      feedback.textContent = `Leider falsch! 😢 Richtig war: ${tn(game.currentTeam.name_en)}`;
+      feedback.className = 'game-feedback show incorrect';
+    }
+  }
+  
+  if (btnCheck) btnCheck.style.display = 'none';
+  if (btnNext) {
+    btnNext.style.display = 'block';
+    btnNext.focus();
+  }
+}
+
+function quitFlagGame() {
+  if (confirm("Möchtest du das Spiel wirklich abbrechen? Dein Fortschritt in dieser Runde geht verloren.")) {
+    game.active = false;
+    renderGameSetup();
+  }
+}
+
+function endFlagGame() {
+  game.active = false;
+  const container = document.getElementById('viewFlagGame');
+  if (!container) return;
+  
+  const scoreRatio = game.score / game.roundCount;
+  let rank = '';
+  let emblem = '';
+  
+  if (scoreRatio === 1) {
+    rank = 'Flaggen-Weltmeister';
+    emblem = '🏆';
+  } else if (scoreRatio >= 0.8) {
+    rank = 'Taktischer Analyst';
+    emblem = '🥇';
+  } else if (scoreRatio >= 0.5) {
+    rank = 'Fan-Kurven-Mitläufer';
+    emblem = '🥈';
+  } else {
+    rank = 'Ersatzbank-Drücker';
+    emblem = '🥉';
+  }
+  
+  container.innerHTML = `
+    <div class="status-bar">
+      <div class="status-live"><span class="live-dot" style="background:var(--accent-gold)"></span><span>🏁 Spiel beendet &middot; Deine Ergebnisse</span></div>
+    </div>
+    <div class="certificate-card">
+      <canvas id="confettiCanvas"></canvas>
+      <div class="certificate-emblem">${emblem}</div>
+      <h2 class="certificate-title">Urkunde</h2>
+      <p class="certificate-subtitle">FIFA WM 2026 FLAGGEN-RATEN</p>
+      
+      <div style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 2rem; position: relative; z-index: 10;">
+        Hiermit wird bescheinigt, dass du die Raterunde erfolgreich absolviert hast.
+      </div>
+      
+      <div class="certificate-rank" style="position: relative; z-index: 10;">
+        Rang: <span style="color: var(--accent-gold)">${rank}</span>
+      </div>
+      <div class="certificate-score" style="position: relative; z-index: 10;">
+        Ergebnis: <strong>${game.score}</strong> von <strong>${game.roundCount}</strong> Flaggen richtig erkannt (${Math.round(scoreRatio * 100)}%).
+      </div>
+      
+      <button class="game-btn" onclick="renderGameSetup()" style="position: relative; z-index: 10;">Nochmal spielen</button>
+    </div>
+  `;
+  
+  if (scoreRatio >= 0.5) {
+    setTimeout(startConfetti, 100);
+  }
+}
+
+function startConfetti() {
+  const canvas = document.getElementById('confettiCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.parentElement.offsetWidth || window.innerWidth;
+  canvas.height = canvas.parentElement.offsetHeight || 500;
+  
+  const colors = ['#f5c842', '#3b82f6', '#22c55e', '#ef4444', '#a855f7', '#ec4899'];
+  const particles = [];
+  for (let i = 0; i < 120; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      r: Math.random() * 6 + 4,
+      d: Math.random() * canvas.height,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      tilt: Math.random() * 10 - 5,
+      tiltAngleIncremental: Math.random() * 0.07 + 0.02,
+      tiltAngle: 0
+    });
+  }
+  
+  let animationId;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let active = false;
+    particles.forEach((p) => {
+      p.tiltAngle += p.tiltAngleIncremental;
+      p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+      p.x += Math.sin(p.tiltAngle);
+      p.tilt = Math.sin(p.tiltAngle - (particles.indexOf(p) / 3)) * 15;
+      
+      if (p.y <= canvas.height) {
+        active = true;
+      }
+      
+      ctx.beginPath();
+      ctx.lineWidth = p.r;
+      ctx.strokeStyle = p.color;
+      ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+      ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+      ctx.stroke();
+    });
+    
+    if (active) {
+      animationId = requestAnimationFrame(draw);
+    }
+  }
+  draw();
+  window.currentConfettiAnimation = animationId;
 }
 
 loadAllData();
