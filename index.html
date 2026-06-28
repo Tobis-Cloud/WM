@@ -1083,8 +1083,8 @@
 <div class="mobile-nav-menu" id="mobileNavMenu">
   <button class="mobile-menu-close" onclick="toggleMobileMenu()">&#x2715;</button>
   <p style="font-size:1.1rem;font-weight:800;margin-bottom:1.5rem;background:linear-gradient(135deg,var(--accent-gold),var(--accent-blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Navigation</p>
-  <button class="mobile-nav-item" data-tab="germany" onclick="selectMobileTab('germany')"><span>🇩🇪 Deutschland</span></button>
-  <button class="mobile-nav-item active" data-tab="groups" onclick="selectMobileTab('groups')"><span>&#127903; Gruppen</span></button>
+  <button class="mobile-nav-item active" data-tab="germany" onclick="selectMobileTab('germany')"><span>🇩🇪 Deutschland</span></button>
+  <button class="mobile-nav-item" data-tab="groups" onclick="selectMobileTab('groups')"><span>&#127903; Gruppen</span></button>
   <button class="mobile-nav-item" data-tab="bracket" onclick="selectMobileTab('bracket')"><span>&#127942; KO-Runden</span></button>
   <button class="mobile-nav-item" data-tab="matches" onclick="selectMobileTab('matches')"><span>&#128197; Alle Spiele</span></button>
   <button class="mobile-nav-item" data-tab="teams" onclick="selectMobileTab('teams')"><span>&#127937; Teams</span></button>
@@ -1095,8 +1095,8 @@
 </div>
 
 <nav class="nav-tabs">
-  <button class="tab-btn" data-tab="germany" id="tabGermany"><span>🇩🇪 Deutschland</span></button>
-  <button class="tab-btn active" data-tab="groups" id="tabGroups"><span>&#127903; Gruppen</span></button>
+  <button class="tab-btn active" data-tab="germany" id="tabGermany"><span>🇩🇪 Deutschland</span></button>
+  <button class="tab-btn" data-tab="groups" id="tabGroups"><span>&#127903; Gruppen</span></button>
   <button class="tab-btn" data-tab="bracket" id="tabBracket"><span>&#127942; KO-Runden</span></button>
   <button class="tab-btn" data-tab="matches" id="tabMatches"><span>&#128197; Alle Spiele</span></button>
   <button class="tab-btn" data-tab="teams" id="tabTeams"><span>&#127937; Teams</span></button>
@@ -1104,7 +1104,7 @@
 </nav>
 
 <main>
-  <div class="view active" id="viewGroups">
+  <div class="view" id="viewGroups">
     <div class="status-bar">
       <div class="status-live"><span class="live-dot"></span><span id="lastUpdate">Lade Daten&hellip;</span></div>
       <button class="refresh-btn" id="refreshBtn" onclick="loadAllData()">&#8635; Aktualisieren</button>
@@ -1119,14 +1119,17 @@
     <div id="bracketContainer"><div class="loading-screen"><div class="spinner"></div><p class="loading-text">Lade Bracket&hellip;</p></div></div>
   </div>
   <div class="view" id="viewMatches">
-    <div class="status-bar"><div class="status-live"><span class="live-dot"></span><span>Alle Spiele der WM 2026</span></div></div>
+    <div class="status-bar">
+      <div class="status-live"><span class="live-dot"></span><span>Alle Spiele der WM 2026</span></div>
+      <button class="refresh-btn" id="btnToggleGroups" onclick="toggleGroupGames()" style="background:var(--accent-blue-dim); border-color:rgba(59,130,246,0.3); color:var(--accent-blue); font-family:inherit; font-size:0.78rem; font-weight:600; padding:0.4rem 0.9rem; border-radius:50px; cursor:pointer; transition:all 0.2s;">Gruppenspiele ausblenden</button>
+    </div>
     <div id="matchesContainer"><div class="loading-screen"><div class="spinner"></div><p class="loading-text">Lade Spielplan&hellip;</p></div></div>
   </div>
   <div class="view" id="viewTeams">
     <div class="status-bar"><div class="status-live"><span class="live-dot"></span><span>Alle 48 Nationalmannschaften</span></div></div>
     <div id="teamsContainer"><div class="loading-screen"><div class="spinner"></div><p class="loading-text">Lade Teams&hellip;</p></div></div>
   </div>
-  <div class="view" id="viewGermany">
+  <div class="view active" id="viewGermany">
     <div class="status-bar">
       <div class="status-live"><span class="live-dot"></span><span>Nationalmannschaft &middot; Deutschland Dashboard</span></div>
     </div>
@@ -1152,20 +1155,40 @@ let S = { teams:{}, groups:[], games:[], loaded:false };
 let flagCache = {};
 let thirdAssignments = {};
 let showOldGames = false;
+let hideGroupGames = false;
+let resolvedPredictions = {};
 let updateIntervalId = null;
 
-function isOlderThanThreeDays(localDateStr) {
+function isOlderThanOneDay(localDateStr) {
   if (!localDateStr) return false;
   const matchDate = new Date(localDateStr);
   if (isNaN(matchDate.getTime())) return false;
   const now = new Date();
   const diffTime = now.getTime() - matchDate.getTime();
   const diffDays = diffTime / (1000 * 60 * 60 * 24);
-  return diffDays > 3;
+  return diffDays > 1; // Älter als 1 Tag
 }
 
 function toggleOldGames() {
   showOldGames = !showOldGames;
+  renderMatches();
+}
+
+function toggleGroupGames() {
+  hideGroupGames = !hideGroupGames;
+  const btn = document.getElementById('btnToggleGroups');
+  if (btn) {
+    btn.textContent = hideGroupGames ? 'Gruppenspiele anzeigen' : 'Gruppenspiele ausblenden';
+    if (hideGroupGames) {
+      btn.style.background = 'var(--accent-gold-dim)';
+      btn.style.color = 'var(--accent-gold)';
+      btn.style.borderColor = 'rgba(245,200,66,0.3)';
+    } else {
+      btn.style.background = 'var(--accent-blue-dim)';
+      btn.style.color = 'var(--accent-blue)';
+      btn.style.borderColor = 'rgba(59,130,246,0.3)';
+    }
+  }
   renderMatches();
 }
 
@@ -2367,6 +2390,7 @@ function openMatchDetailModal(gameId) {
 function renderBracket() {
   const c = document.getElementById('bracketContainer');
   if(!c||!S.loaded) return;
+  resolvedPredictions = {}; // Reset prediction cache before resolving teams for the new render
   const gw={}, gr={};
   S.groups.forEach(g => {
     const s = sortTeams(g);
@@ -2539,15 +2563,118 @@ function drawBracketLines() {
 
 window.addEventListener('resize', drawBracketLines);
 
-function resolveTeam(id, label, gw, gr, gameId) {
-  if(id&&id!=='0') return id;
+function resolveTeam(id, label, gw, gr, gameId, depth = 0) {
+  if (depth > 10) return null;
+  if(id&&id!=='0') {
+    if (gameId && label) {
+      resolvedPredictions[gameId + '_' + label] = false;
+    }
+    return id;
+  }
   if(!label) return null;
+
+  // Helper to check if a group is finished
+  const isGroupFinished = (groupLetter) => {
+    const matches = S.games.filter(g => g.group === groupLetter && g.type === 'group');
+    return matches.length > 0 && matches.every(g => g.finished === 'TRUE');
+  };
+
   const wm = label.match(/Winner Group ([A-L])/);
-  if(wm) return gw[wm[1]]||null;
+  if(wm) {
+    const groupLetter = wm[1];
+    const teamId = gw[groupLetter] || null;
+    if (gameId) {
+      resolvedPredictions[gameId + '_' + label] = !isGroupFinished(groupLetter);
+    }
+    return teamId;
+  }
+
   const rm = label.match(/Runner-up Group ([A-L])/);
-  if(rm) return gr[rm[1]]||null;
+  if(rm) {
+    const groupLetter = rm[1];
+    const teamId = gr[groupLetter] || null;
+    if (gameId) {
+      resolvedPredictions[gameId + '_' + label] = !isGroupFinished(groupLetter);
+    }
+    return teamId;
+  }
+
   const tm = label.match(/3rd Group/);
-  if(tm && gameId) return thirdAssignments[gameId]||null;
+  if(tm && gameId) {
+    const teamId = thirdAssignments[gameId] || null;
+    const allGroupGamesFinished = S.games.filter(g => g.type === 'group').every(g => g.finished === 'TRUE');
+    resolvedPredictions[gameId + '_' + label] = !allGroupGamesFinished;
+    return teamId;
+  }
+  
+  // Winner of a previous KO match
+  const wm_match = label.match(/Winner Match (\d+)/);
+  if (wm_match) {
+    const prevGameId = wm_match[1];
+    const prevGame = S.games.find(g => g.id === prevGameId);
+    if (prevGame) {
+      const isFinished = prevGame.finished === 'TRUE';
+      const isLive = prevGame.time_elapsed && prevGame.time_elapsed !== 'notstarted' && prevGame.time_elapsed !== 'finished';
+      
+      if (isFinished || isLive) {
+        const prevHtid = resolveTeam(prevGame.home_team_id, prevGame.home_team_label, gw, gr, prevGame.id, depth + 1);
+        const prevAtid = resolveTeam(prevGame.away_team_id, prevGame.away_team_label, gw, gr, prevGame.id, depth + 1);
+        
+        let resolvedId = null;
+        if (isFinished) {
+          const hs = parseInt(prevGame.home_score) || 0;
+          const as = parseInt(prevGame.away_score) || 0;
+          resolvedId = hs > as ? prevHtid : prevAtid;
+        } else {
+          // Game is live: Prognose!
+          const hs = parseInt(prevGame.home_score) || 0;
+          const as = parseInt(prevGame.away_score) || 0;
+          resolvedId = hs > as ? prevHtid : (as > hs ? prevAtid : prevHtid);
+        }
+        
+        if (gameId) {
+          resolvedPredictions[gameId + '_' + label] = !isFinished;
+        }
+        return resolvedId;
+      }
+    }
+    return null;
+  }
+
+  // Loser of a previous KO match (for Third Place match)
+  const lm_match = label.match(/Loser Match (\d+)/);
+  if (lm_match) {
+    const prevGameId = lm_match[1];
+    const prevGame = S.games.find(g => g.id === prevGameId);
+    if (prevGame) {
+      const isFinished = prevGame.finished === 'TRUE';
+      const isLive = prevGame.time_elapsed && prevGame.time_elapsed !== 'notstarted' && prevGame.time_elapsed !== 'finished';
+      
+      if (isFinished || isLive) {
+        const prevHtid = resolveTeam(prevGame.home_team_id, prevGame.home_team_label, gw, gr, prevGame.id, depth + 1);
+        const prevAtid = resolveTeam(prevGame.away_team_id, prevGame.away_team_label, gw, gr, prevGame.id, depth + 1);
+        
+        let resolvedId = null;
+        if (isFinished) {
+          const hs = parseInt(prevGame.home_score) || 0;
+          const as = parseInt(prevGame.away_score) || 0;
+          resolvedId = hs > as ? prevAtid : prevHtid;
+        } else {
+          // Game is live: Prognose!
+          const hs = parseInt(prevGame.home_score) || 0;
+          const as = parseInt(prevGame.away_score) || 0;
+          resolvedId = hs > as ? prevAtid : (as > hs ? prevHtid : prevAtid);
+        }
+        
+        if (gameId) {
+          resolvedPredictions[gameId + '_' + label] = !isFinished;
+        }
+        return resolvedId;
+      }
+    }
+    return null;
+  }
+  
   return null;
 }
 
@@ -2558,15 +2685,15 @@ function renderBracketMatch(game, gw, gr, inlineStyle = '', isThird = false) {
   const ht = htid?S.teams[htid]:null, at = atid?S.teams[atid]:null;
   const hw = fin&&parseInt(game.home_score)>parseInt(game.away_score);
   const aw = fin&&parseInt(game.away_score)>parseInt(game.home_score);
-  const isPredH = !fin&&ht&&game.home_team_id==='0';
-  const isPredA = !fin&&at&&game.away_team_id==='0';
+  const isPredH = !fin && htid && resolvedPredictions[game.id + '_' + game.home_team_label];
+  const isPredA = !fin && atid && resolvedPredictions[game.id + '_' + game.away_team_label];
   const ds = fd(game.local_date, game.stadium_id);
   const teamRow = (team, label, score, isW, isL, isPred) => {
-    if(!team&&!label) return '<div class="bracket-team"><span class="bracket-team-name bracket-tbd">Noch offen</span></div>';
+    if(!team) return '<div class="bracket-team"><span class="bracket-team-name bracket-tbd">noch offen</span></div>';
     return '<div class="bracket-team'+(isW?' winner':'')+(isL?' loser':'')+(isPred?' predicted':'')+'">'
       +(team?'<img class="bracket-team-flag" src="'+team.flag+'" alt="" loading="lazy">':'')
       +'<span class="bracket-team-name" style="'+(isPred?'color:var(--accent-blue);font-style:italic':'')+'">'
-      +(team?tn(team.name_en):(label||'?'))
+      +tn(team.name_en)
       +(isPred?' <small style="font-size:0.6rem;opacity:0.7">(Prognose)</small>':'')
       +'</span>'
       +(fin?'<span class="bracket-team-score">'+score+'</span>':'')
@@ -2586,44 +2713,56 @@ function renderMatches() {
   if(!c||!S.loaded) return;
   
   const groupGames = S.games.filter(g=>g.type==='group').sort((a,b)=>pd(a.local_date)-pd(b.local_date));
-  const oldGamesCount = groupGames.filter(g => isOlderThanThreeDays(g.local_date)).length;
+  
+  // Berechne die Anzahl der ausgeblendeten alten Spiele dynamisch
+  const oldGroupGamesCount = hideGroupGames ? 0 : groupGames.filter(g => isOlderThanOneDay(g.local_date)).length;
+  
+  let oldKoGamesCount = 0;
+  const koTypes = [['r32','16tel-Finale'],['r16','Achtelfinale'],['qf','Viertelfinale'],['sf','Halbfinale'],['third','Spiel um Platz 3'],['final','&#127942; Finale']];
+  koTypes.forEach(([type,label]) => {
+    const gs = S.games.filter(g=>g.type===type);
+    oldKoGamesCount += gs.filter(g => isOlderThanOneDay(g.local_date)).length;
+  });
+  
+  const totalOldGamesCount = oldGroupGamesCount + oldKoGamesCount;
   
   let html = '';
   
-  if (oldGamesCount > 0) {
+  if (totalOldGamesCount > 0) {
     html += '<div class="old-games-banner" style="display:flex;flex-direction:column;align-items:center;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.5rem;text-align:center;gap:0.75rem;">'
-      + '<p style="font-size:0.9rem;color:var(--text-secondary);font-weight:500;">⚽ ' + oldGamesCount + ' vergangene Gruppenphase-Spiele wurden ausgeblendet.</p>'
+      + '<p style="font-size:0.9rem;color:var(--text-secondary);font-weight:500;">⚽ ' + totalOldGamesCount + ' vergangene Spiele wurden ausgeblendet.</p>'
       + '<button class="tab-btn" onclick="toggleOldGames()" style="max-width:240px;background:var(--accent-blue-dim);border-color:rgba(59,130,246,0.3);color:var(--accent-blue);font-weight:700;">'
         + '<span>' + (showOldGames ? 'Alte Spiele ausblenden' : 'Alte Spiele anzeigen') + '</span>'
       + '</button>'
       + '</div>';
   }
   
-  html += '<div class="section-header"><span class="section-title">Gruppenphase</span><span class="section-count">'+groupGames.length+' Spiele</span></div>';
-  
-  const byDate = {};
-  groupGames.forEach(g => {
-    const isOld = isOlderThanThreeDays(g.local_date);
-    if (isOld && !showOldGames) return;
+  if (!hideGroupGames) {
+    html += '<div class="section-header"><span class="section-title">Gruppenphase</span><span class="section-count">'+groupGames.length+' Spiele</span></div>';
     
-    const d=(g.local_date||'').split(' ')[0];
-    if(!byDate[d]) byDate[d]=[];
-    byDate[d].push(g);
-  });
+    const byDate = {};
+    groupGames.forEach(g => {
+      const isOld = isOlderThanOneDay(g.local_date);
+      if (isOld && !showOldGames) return;
+      
+      const d=(g.local_date||'').split(' ')[0];
+      if(!byDate[d]) byDate[d]=[];
+      byDate[d].push(g);
+    });
+    
+    Object.keys(byDate).sort().forEach(date => {
+      const gs = byDate[date];
+      html += '<div class="matchday-section" data-date="'+date+'"><div class="matchday-header"><span class="matchday-title">'+fdf(date)+'</span><span class="matchday-date">'+gs.length+' Spiele</span></div>'+gs.map(g=>renderMatchCard(g)).join('')+'</div>';
+    });
+  }
   
-  Object.keys(byDate).sort().forEach(date => {
-    const gs = byDate[date];
-    html += '<div class="matchday-section" data-date="'+date+'"><div class="matchday-header"><span class="matchday-title">'+fdf(date)+'</span><span class="matchday-date">'+gs.length+' Spiele</span></div>'+gs.map(g=>renderMatchCard(g)).join('')+'</div>';
-  });
-  
-  const koTypes = [['r32','16tel-Finale'],['r16','Achtelfinale'],['qf','Viertelfinale'],['sf','Halbfinale'],['third','Spiel um Platz 3'],['final','&#127942; Finale']];
   koTypes.forEach(([type,label]) => {
     const gs = S.games.filter(g=>g.type===type).sort((a,b)=>parseInt(a.id)-parseInt(b.id));
     if(!gs.length) return;
     
     const displayedKo = gs.filter(g => {
       if (showOldGames) return true;
-      return !isOlderThanThreeDays(g.local_date);
+      return !isOlderThanOneDay(g.local_date);
     });
     
     const renderList = showOldGames ? gs : displayedKo;
@@ -2641,6 +2780,7 @@ function renderMatchCard(g) {
   const an = at?tn(at.name_en):(g.away_team_label||g.away_team_name_en||'?');
   const hf = ht?ht.flag:'', af = at?at.flag:'';
   const fin = g.finished==='TRUE', live = g.time_elapsed&&g.time_elapsed!=='notstarted'&&g.time_elapsed!=='finished';
+  const upcoming = !fin && !live;
   const hw = fin&&parseInt(g.home_score)>parseInt(g.away_score), aw = fin&&parseInt(g.away_score)>parseInt(g.home_score);
   const ds = fd(g.local_date, g.stadium_id);
   
@@ -2649,7 +2789,7 @@ function renderMatchCard(g) {
   const tvColor = isAvailable ? 'var(--text-secondary)' : 'var(--text-muted)';
   const tvText = '<span class="tv-badge" style="background:var(--bg-primary);border:1px solid var(--border-bright);color:' + tvColor + ';font-size:0.65rem;padding:0.1rem 0.35rem;border-radius:4px;margin-top:0.2rem;font-weight:700;display:inline-block;">TV: ' + tv + '</span>';
   
-  return '<div class="match-card'+(live?' match-live':'')+'" onclick="openMatchDetailModal(\''+g.id+'\')" style="cursor:pointer">\
+  return '<div class="match-card'+(live?' match-live':'')+(upcoming?' match-upcoming':'')+'" onclick="openMatchDetailModal(\''+g.id+'\')" style="cursor:pointer">\
 <div class="match-card-team">'
 +(hf?'<img class="match-card-flag" src="'+hf+'" alt="" loading="lazy">':'')
 +'<span class="match-card-name" style="'+(hw?'color:var(--accent-green)':'')+'">'+hn+'</span></div>\
@@ -3092,6 +3232,15 @@ function renderGameSetup() {
   const savedBest = localStorage.getItem('wm2026_best_streak') || 0;
   game.bestStreak = parseInt(savedBest);
   
+  // Generiere die Optionen von 1 bis 48 dynamisch in 1er-Schritten
+  let selectOptions = '';
+  for (let i = 1; i <= 48; i++) {
+    const selected = i === 10 ? 'selected' : '';
+    const label = i === 1 ? '1 Flagge' : `${i} Flaggen`;
+    selectOptions += `<option value="${i}" ${selected}>${label}</option>`;
+  }
+  selectOptions += `<option value="infinite">Endlos-Modus</option>`;
+  
   container.innerHTML = `
     <div class="status-bar">
       <div class="status-live"><span class="live-dot" style="background:var(--accent-blue)"></span><span>🏁 Flaggen-Raten &middot; Zeige deine WM-Expertise</span></div>
@@ -3104,11 +3253,7 @@ function renderGameSetup() {
       <div style="text-align:left; max-width:300px; margin:0 auto;">
         <label class="game-select-label" for="roundsSelect">Anzahl der Flaggen:</label>
         <select id="roundsSelect" class="game-select">
-          <option value="5">5 Flaggen</option>
-          <option value="10" selected>10 Flaggen</option>
-          <option value="20">20 Flaggen</option>
-          <option value="48">Alle 48 Flaggen</option>
-          <option value="infinite">Endlos-Modus</option>
+          ${selectOptions}
         </select>
       </div>
       
