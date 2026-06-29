@@ -2574,26 +2574,26 @@ function renderBracket() {
     return list;
   };
 
-  // Left halves (Top half of standard bracket feeding SF 101)
-  const leftR32 = getGamesOrdered(['73', '74', '75', '76', '77', '78', '79', '80']);
-  const leftR16 = getGamesOrdered(['89', '90', '91', '92']);
-  const leftQF = getGamesOrdered(['97', '98']);
-  const leftSF = getGamesOrdered(['101']);
-
-  // Right halves (Bottom half of standard bracket feeding SF 102)
-  const rightR32 = getGamesOrdered(['81', '82', '83', '84', '85', '86', '87', '88']);
-  const rightR16 = getGamesOrdered(['93', '94', '95', '96']);
-  const rightQF = getGamesOrdered(['99', '100']);
-  const rightSF = getGamesOrdered(['102']);
-
-  const finalMatch = S.games.find(g => g.type === 'final');
-  const thirdMatch = S.games.find(g => g.type === 'third');
-
   // Mobile ordering (Original chronological/non-crossing vertical layout)
   const order32 = ['74', '77', '73', '75', '83', '84', '81', '82', '76', '78', '79', '80', '86', '88', '85', '87'];
   const order16 = ['89', '90', '93', '94', '91', '92', '95', '96'];
   const orderQf = ['97', '98', '99', '100'];
   const orderSf = ['101', '102'];
+
+  // Left halves (First half of the non-crossing vertical orders)
+  const leftR32 = getGamesOrdered(order32.slice(0, 8));
+  const leftR16 = getGamesOrdered(order16.slice(0, 4));
+  const leftQF = getGamesOrdered(orderQf.slice(0, 2));
+  const leftSF = getGamesOrdered(orderSf.slice(0, 1));
+
+  // Right halves (Second half of the non-crossing vertical orders)
+  const rightR32 = getGamesOrdered(order32.slice(8, 16));
+  const rightR16 = getGamesOrdered(order16.slice(4, 8));
+  const rightQF = getGamesOrdered(orderQf.slice(2, 4));
+  const rightSF = getGamesOrdered(orderSf.slice(1, 2));
+
+  const finalMatch = S.games.find(g => g.type === 'final');
+  const thirdMatch = S.games.find(g => g.type === 'third');
   
   const mobileR32 = getGamesOrdered(order32);
   const mobileR16 = getGamesOrdered(order16);
@@ -2603,7 +2603,7 @@ function renderBracket() {
   // 1. DESKTOP HTML (Symmetrical split butterfly bracket)
   let desktopHtml = '<div class="bracket-desktop">';
   
-  desktopHtml += '<div class="round-col-desktop r32-col-left"><div class="round-label-desktop">Runde der 32</div><div class="round-games-desktop">';
+  desktopHtml += '<div class="round-col-desktop r32-col-left"><div class="round-label-desktop">16tel-Finale</div><div class="round-games-desktop">';
   leftR32.forEach(g => desktopHtml += renderBracketMatch(g, gw, gr));
   desktopHtml += '</div></div>';
   
@@ -2636,7 +2636,7 @@ function renderBracket() {
   rightR16.forEach(g => desktopHtml += renderBracketMatch(g, gw, gr));
   desktopHtml += '</div></div>';
   
-  desktopHtml += '<div class="round-col-desktop r32-col-right"><div class="round-label-desktop">Runde der 32</div><div class="round-games-desktop">';
+  desktopHtml += '<div class="round-col-desktop r32-col-right"><div class="round-label-desktop">16tel-Finale</div><div class="round-games-desktop">';
   rightR32.forEach(g => desktopHtml += renderBracketMatch(g, gw, gr));
   desktopHtml += '</div></div>';
   
@@ -2645,7 +2645,7 @@ function renderBracket() {
   // 2. MOBILE HTML (Horizontal scrolling left-to-right)
   let mobileHtml = '<div class="bracket-mobile">';
   
-  mobileHtml += '<div class="round-col-mobile r32-col-mobile"><div class="round-label">Runde der 32</div><div class="round-games-mobile">';
+  mobileHtml += '<div class="round-col-mobile r32-col-mobile"><div class="round-label">16tel-Finale</div><div class="round-games-mobile">';
   mobileR32.forEach(g => mobileHtml += renderBracketMatch(g, gw, gr));
   mobileHtml += '</div></div><div class="round-spacer-mobile"></div>';
   
