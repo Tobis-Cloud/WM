@@ -177,22 +177,7 @@
     .stat-label{font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em}
     
     .bracket-scroll{overflow-x:auto;padding:1rem 0 2rem;-webkit-overflow-scrolling:touch}
-    .bracket-container{display:flex;gap:24px;min-width:max-content;align-items:flex-start;padding:0.5rem;position:relative}
-    .round-col{display:flex;flex-direction:column;width:190px}
-    .round-label{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);text-align:center;padding:0.5rem 0.75rem;margin-bottom:0.5rem;white-space:nowrap}
-    .round-games-list{display:flex;flex-direction:column;justify-content:space-around;flex-grow:1;height:1440px;position:relative}
-    .bracket-match{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);width:185px;height:80px;display:flex;flex-direction:column;justify-content:space-between;transition:all 0.3s ease;cursor:pointer;position:relative;z-index:2}
-    .bracket-match:hover{border-color:var(--accent-blue);box-shadow:0 0 16px rgba(59,130,246,0.25)}
-    .bracket-team{display:flex;align-items:center;gap:0.55rem;padding:0.3rem 0.55rem;height:27px;position:relative;transition:background 0.2s}
-    .bracket-team:last-child{border-bottom:none}
-    .bracket-team.winner{background:var(--accent-green-dim)}
-    .bracket-team.loser{opacity:0.45}
-    .bracket-team.predicted{border-left:2px solid var(--accent-blue)}
-    .bracket-team-flag{width:20px;height:13px;object-fit:cover;border-radius:2px;flex-shrink:0}
-    .bracket-team-name{font-size:0.74rem;font-weight:600;flex:1;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .bracket-team-score{font-size:0.85rem;font-weight:800;min-width:18px;text-align:right;color:var(--accent-gold)}
-    .bracket-tbd{color:var(--text-muted);font-style:italic;font-weight:400;font-size:0.7rem}
-    .bracket-meta{padding:0.15rem 0.55rem;font-size:0.6rem;color:var(--text-muted);background:var(--bg-primary);border-top:1px solid var(--border);height:18px;display:flex;align-items:center}
+    .bracket-container{position:relative;padding:0.5rem;min-height:500px}
     
     #bracketSvg {
       position: absolute;
@@ -204,13 +189,144 @@
       z-index: 1;
     }
     
-    .final-match {
-      position: absolute;
-      top: 680px;
+    .round-label{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);text-align:center;padding:0.5rem 0.75rem;margin-bottom:0.5rem;white-space:nowrap}
+    .bracket-match{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);display:flex;flex-direction:column;justify-content:space-between;transition:all 0.3s ease;cursor:pointer;position:relative;z-index:2}
+    .bracket-match:hover{border-color:var(--accent-blue);box-shadow:0 0 16px rgba(59,130,246,0.25)}
+    .bracket-team{display:flex;align-items:center;gap:0.55rem;padding:0.3rem 0.55rem;height:27px;position:relative;transition:background 0.2s}
+    .bracket-team:last-child{border-bottom:none}
+    .bracket-team.winner{background:var(--accent-green-dim)}
+    .bracket-team.loser{opacity:0.45}
+    .bracket-team.predicted{border-left:2px solid var(--accent-blue)}
+    .bracket-team-flag{width:20px;height:13px;object-fit:cover;border-radius:2px;flex-shrink:0}
+    .bracket-team-name{font-size:0.74rem;font-weight:600;flex:1;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .bracket-team-score{font-size:0.85rem;font-weight:800;min-width:18px;text-align:right;color:var(--accent-gold)}
+    .bracket-tbd{color:var(--text-muted);font-style:italic;font-weight:400;font-size:0.7rem}
+    .bracket-meta{padding:0.15rem 0.55rem;font-size:0.6rem;color:var(--text-muted);background:var(--bg-primary);border-top:1px solid var(--border);height:18px;display:flex;align-items:center}
+
+    /* Desktop Layout: Split Butterfly Bracket */
+    .bracket-desktop {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      min-width: 1280px;
+      max-width: 1500px;
+      margin: 0 auto;
+      height: 720px;
+      position: relative;
+      z-index: 2;
     }
-    .third-match {
-      position: absolute;
-      top: 960px;
+    .round-col-desktop {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 145px;
+    }
+    .round-label-desktop {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-align: center;
+      height: 25px;
+      line-height: 25px;
+      white-space: nowrap;
+    }
+    .round-games-desktop {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      flex-grow: 1;
+      height: calc(100% - 25px);
+    }
+    .round-games-desktop.center-games {
+      justify-content: center;
+      gap: 50px;
+    }
+    .bracket-desktop .bracket-match {
+      width: 140px;
+      height: 70px;
+    }
+    .bracket-desktop .bracket-team {
+      height: 24px;
+      padding: 0.2rem 0.45rem;
+    }
+    .bracket-desktop .bracket-team-name {
+      font-size: 0.65rem;
+    }
+    .bracket-desktop .bracket-team-score {
+      font-size: 0.72rem;
+    }
+    .bracket-desktop .bracket-team-flag {
+      width: 17px;
+      height: 11px;
+    }
+    .bracket-desktop .bracket-meta {
+      height: 16px;
+      font-size: 0.55rem;
+      padding: 0.1rem 0.45rem;
+    }
+
+    /* Mobile Layout: Scrollable Left-to-Right Bracket */
+    .bracket-mobile {
+      display: none;
+    }
+
+    @media (max-width: 1023px) {
+      .bracket-desktop {
+        display: none;
+      }
+      .bracket-mobile {
+        display: flex;
+        gap: 0;
+        min-width: max-content;
+        align-items: flex-start;
+        position: relative;
+        z-index: 2;
+      }
+      .round-col-mobile {
+        display: flex;
+        flex-direction: column;
+        width: 170px;
+      }
+      .round-games-mobile {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        height: 1440px;
+      }
+      .final-col-mobile .round-games-mobile {
+        justify-content: center;
+        gap: 80px;
+      }
+      .round-spacer-mobile {
+        width: 20px;
+        flex-shrink: 0;
+      }
+      .bracket-mobile .bracket-match {
+        width: 100%;
+        height: 76px;
+      }
+      .bracket-mobile .bracket-team {
+        height: 26px;
+        padding: 0.25rem 0.5rem;
+      }
+      .bracket-mobile .bracket-team-name {
+        font-size: 0.7rem;
+      }
+      .bracket-mobile .bracket-team-score {
+        font-size: 0.8rem;
+      }
+      .bracket-mobile .bracket-team-flag {
+        width: 18px;
+        height: 12px;
+      }
+      .bracket-mobile .bracket-meta {
+        height: 17px;
+        font-size: 0.58rem;
+        padding: 0.12rem 0.5rem;
+      }
     }
     
     .match-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:0.75rem;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:1rem;cursor:pointer;transition:all 0.25s ease}
@@ -2449,53 +2565,114 @@ function renderBracket() {
     }
   });
 
+  const getGamesOrdered = (orderList) => {
+    const list = [];
+    orderList.forEach(id => {
+      const g = S.games.find(x => x.id === id);
+      if (g) list.push(g);
+    });
+    return list;
+  };
+
+  // Left halves (Top half of standard bracket feeding SF 101)
+  const leftR32 = getGamesOrdered(['73', '74', '75', '76', '77', '78', '79', '80']);
+  const leftR16 = getGamesOrdered(['89', '90', '91', '92']);
+  const leftQF = getGamesOrdered(['97', '98']);
+  const leftSF = getGamesOrdered(['101']);
+
+  // Right halves (Bottom half of standard bracket feeding SF 102)
+  const rightR32 = getGamesOrdered(['81', '82', '83', '84', '85', '86', '87', '88']);
+  const rightR16 = getGamesOrdered(['93', '94', '95', '96']);
+  const rightQF = getGamesOrdered(['99', '100']);
+  const rightSF = getGamesOrdered(['102']);
+
+  const finalMatch = S.games.find(g => g.type === 'final');
+  const thirdMatch = S.games.find(g => g.type === 'third');
+
+  // Mobile ordering (Original chronological/non-crossing vertical layout)
   const order32 = ['74', '77', '73', '75', '83', '84', '81', '82', '76', '78', '79', '80', '86', '88', '85', '87'];
   const order16 = ['89', '90', '93', '94', '91', '92', '95', '96'];
   const orderQf = ['97', '98', '99', '100'];
   const orderSf = ['101', '102'];
-
-  const byTypeOrdered = (type, order) => {
-    const gs = S.games.filter(g => g.type === type);
-    return gs.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
-  };
-
-  const rounds = [
-    {label:'16tel-Finale', games:byTypeOrdered('r32', order32), colClass: 'r32-col'},
-    {label:'Achtelfinale', games:byTypeOrdered('r16', order16), colClass: 'r16-col'},
-    {label:'Viertelfinale', games:byTypeOrdered('qf', orderQf), colClass: 'qf-col'},
-    {label:'Halbfinale', games:byTypeOrdered('sf', orderSf), colClass: 'sf-col'},
-    {
-      label:'Finale & Platz 3', 
-      games:[
-        { game: S.games.find(g => g.type === 'final'), style: 'position: absolute; top: 680px;', isFinal: true },
-        { game: S.games.find(g => g.type === 'third'), style: 'position: absolute; top: 960px;', isThird: true }
-      ].filter(x => x.game),
-      colClass: 'final-col',
-      isCustom: true
-    }
-  ];
-
-  let html = '<div class="bracket-scroll"><div class="bracket-container" style="position:relative;">';
-  html += '<svg id="bracketSvg"></svg>';
-  rounds.forEach((round) => {
-    html += '<div class="round-col ' + round.colClass + '"><div class="round-label">'+round.label+'</div><div class="round-games-list">';
-    
-    if (round.isCustom) {
-      round.games.forEach(item => {
-        html += renderBracketMatch(item.game, gw, gr, item.style, item.isThird);
-      });
-    } else {
-      round.games.forEach(g => {
-        html += renderBracketMatch(g, gw, gr);
-      });
-    }
-    
-    html += '</div></div>';
-  });
-  html += '</div></div><div class="legend" style="margin-top:1rem;padding:0 0.5rem"><div class="legend-item"><div class="legend-dot" style="background:var(--accent-green)"></div>Sieger</div><div class="legend-item"><div class="legend-dot" style="background:var(--accent-blue)"></div>Prognose (aus Gruppenphase)</div></div>';
-  c.innerHTML = html;
   
-  setTimeout(drawBracketLines, 50);
+  const mobileR32 = getGamesOrdered(order32);
+  const mobileR16 = getGamesOrdered(order16);
+  const mobileQF = getGamesOrdered(orderQf);
+  const mobileSF = getGamesOrdered(orderSf);
+
+  // 1. DESKTOP HTML (Symmetrical split butterfly bracket)
+  let desktopHtml = '<div class="bracket-desktop">';
+  
+  desktopHtml += '<div class="round-col-desktop r32-col-left"><div class="round-label-desktop">Runde der 32</div><div class="round-games-desktop">';
+  leftR32.forEach(g => desktopHtml += renderBracketMatch(g, gw, gr));
+  desktopHtml += '</div></div>';
+  
+  desktopHtml += '<div class="round-col-desktop r16-col-left"><div class="round-label-desktop">Achtelfinale</div><div class="round-games-desktop">';
+  leftR16.forEach(g => desktopHtml += renderBracketMatch(g, gw, gr));
+  desktopHtml += '</div></div>';
+  
+  desktopHtml += '<div class="round-col-desktop qf-col-left"><div class="round-label-desktop">Viertelfinale</div><div class="round-games-desktop">';
+  leftQF.forEach(g => desktopHtml += renderBracketMatch(g, gw, gr));
+  desktopHtml += '</div></div>';
+  
+  desktopHtml += '<div class="round-col-desktop sf-col-left"><div class="round-label-desktop">Halbfinale</div><div class="round-games-desktop">';
+  leftSF.forEach(g => desktopHtml += renderBracketMatch(g, gw, gr));
+  desktopHtml += '</div></div>';
+  
+  desktopHtml += '<div class="round-col-desktop final-col-center"><div class="round-label-desktop">Finale / Platz 3</div><div class="round-games-desktop center-games">';
+  if (finalMatch) desktopHtml += renderBracketMatch(finalMatch, gw, gr, '', false);
+  if (thirdMatch) desktopHtml += renderBracketMatch(thirdMatch, gw, gr, '', true);
+  desktopHtml += '</div></div>';
+  
+  desktopHtml += '<div class="round-col-desktop sf-col-right"><div class="round-label-desktop">Halbfinale</div><div class="round-games-desktop">';
+  rightSF.forEach(g => desktopHtml += renderBracketMatch(g, gw, gr));
+  desktopHtml += '</div></div>';
+  
+  desktopHtml += '<div class="round-col-desktop qf-col-right"><div class="round-label-desktop">Viertelfinale</div><div class="round-games-desktop">';
+  rightQF.forEach(g => desktopHtml += renderBracketMatch(g, gw, gr));
+  desktopHtml += '</div></div>';
+  
+  desktopHtml += '<div class="round-col-desktop r16-col-right"><div class="round-label-desktop">Achtelfinale</div><div class="round-games-desktop">';
+  rightR16.forEach(g => desktopHtml += renderBracketMatch(g, gw, gr));
+  desktopHtml += '</div></div>';
+  
+  desktopHtml += '<div class="round-col-desktop r32-col-right"><div class="round-label-desktop">Runde der 32</div><div class="round-games-desktop">';
+  rightR32.forEach(g => desktopHtml += renderBracketMatch(g, gw, gr));
+  desktopHtml += '</div></div>';
+  
+  desktopHtml += '</div>';
+
+  // 2. MOBILE HTML (Horizontal scrolling left-to-right)
+  let mobileHtml = '<div class="bracket-mobile">';
+  
+  mobileHtml += '<div class="round-col-mobile r32-col-mobile"><div class="round-label">Runde der 32</div><div class="round-games-mobile">';
+  mobileR32.forEach(g => mobileHtml += renderBracketMatch(g, gw, gr));
+  mobileHtml += '</div></div><div class="round-spacer-mobile"></div>';
+  
+  mobileHtml += '<div class="round-col-mobile r16-col-mobile"><div class="round-label">Achtelfinale</div><div class="round-games-mobile">';
+  mobileR16.forEach(g => mobileHtml += renderBracketMatch(g, gw, gr));
+  mobileHtml += '</div></div><div class="round-spacer-mobile"></div>';
+  
+  mobileHtml += '<div class="round-col-mobile qf-col-mobile"><div class="round-label">Viertelfinale</div><div class="round-games-mobile">';
+  mobileQF.forEach(g => mobileHtml += renderBracketMatch(g, gw, gr));
+  mobileHtml += '</div></div><div class="round-spacer-mobile"></div>';
+  
+  mobileHtml += '<div class="round-col-mobile sf-col-mobile"><div class="round-label">Halbfinale</div><div class="round-games-mobile">';
+  mobileSF.forEach(g => mobileHtml += renderBracketMatch(g, gw, gr));
+  mobileHtml += '</div></div><div class="round-spacer-mobile"></div>';
+  
+  mobileHtml += '<div class="round-col-mobile final-col-mobile"><div class="round-label">Finale / Platz 3</div><div class="round-games-mobile">';
+  if (finalMatch) mobileHtml += renderBracketMatch(finalMatch, gw, gr, '', false);
+  if (thirdMatch) mobileHtml += renderBracketMatch(thirdMatch, gw, gr, '', true);
+  mobileHtml += '</div></div>';
+  
+  mobileHtml += '</div>';
+
+  const legendHtml = '<div class="legend" style="margin-top:1.5rem;padding:0 0.5rem"><div class="legend-item"><div class="legend-dot" style="background:var(--accent-green)"></div>Sieger</div><div class="legend-item"><div class="legend-dot" style="background:var(--accent-blue)"></div>Prognose (aus Gruppenphase/Live)</div></div>';
+
+  c.innerHTML = '<div class="bracket-scroll"><div class="bracket-container"><svg id="bracketSvg"></svg>' + desktopHtml + mobileHtml + '</div></div>' + legendHtml;
+  
+  setTimeout(drawBracketLines, 100);
 }
 
 function drawBracketLines() {
@@ -2505,19 +2682,11 @@ function drawBracketLines() {
   const container = document.querySelector('.bracket-container');
   if (!container) return;
   const rectContainer = container.getBoundingClientRect();
+  if (rectContainer.width === 0) return;
+  
   svg.setAttribute('width', rectContainer.width);
   svg.setAttribute('height', rectContainer.height);
   
-  const cols = [
-    document.querySelectorAll('.r32-col .bracket-match'),
-    document.querySelectorAll('.r16-col .bracket-match'),
-    document.querySelectorAll('.qf-col .bracket-match'),
-    document.querySelectorAll('.sf-col .bracket-match'),
-    document.querySelectorAll('.final-col .bracket-match')
-  ];
-  
-  if (!cols[0].length || !cols[1].length || !cols[2].length || !cols[3].length || !cols[4].length) return;
-
   const drawCurve = (elA, elB) => {
     if (!elA || !elB) return;
     const rA = elA.getBoundingClientRect();
@@ -2541,27 +2710,74 @@ function drawBracketLines() {
     svg.appendChild(path);
   };
 
-  // Verbinde R32 -> R16 (16 Spiele -> 8 Spiele)
-  for (let i = 0; i < 8; i++) {
-    drawCurve(cols[0][2 * i], cols[1][i]);
-    drawCurve(cols[0][2 * i + 1], cols[1][i]);
+  if (window.innerWidth >= 1024) {
+    // Desktop layout connections
+    const colL32 = document.querySelectorAll('.r32-col-left .bracket-match');
+    const colL16 = document.querySelectorAll('.r16-col-left .bracket-match');
+    const colLQ = document.querySelectorAll('.qf-col-left .bracket-match');
+    const colLS = document.querySelectorAll('.sf-col-left .bracket-match');
+    const colFinal = document.querySelectorAll('.final-col-center .bracket-match');
+    const colRS = document.querySelectorAll('.sf-col-right .bracket-match');
+    const colRQ = document.querySelectorAll('.qf-col-right .bracket-match');
+    const colR16 = document.querySelectorAll('.r16-col-right .bracket-match');
+    const colR32 = document.querySelectorAll('.r32-col-right .bracket-match');
+    
+    if (colL32.length >= 8 && colL16.length >= 4 && colLQ.length >= 2 && colLS.length >= 1 && 
+        colFinal.length >= 1 && colRS.length >= 1 && colRQ.length >= 2 && colR16.length >= 4 && colR32.length >= 8) {
+      
+      // Left side connections
+      for (let i = 0; i < 4; i++) {
+        drawCurve(colL32[2 * i], colL16[i]);
+        drawCurve(colL32[2 * i + 1], colL16[i]);
+      }
+      for (let i = 0; i < 2; i++) {
+        drawCurve(colL16[2 * i], colLQ[i]);
+        drawCurve(colL16[2 * i + 1], colLQ[i]);
+      }
+      drawCurve(colLQ[0], colLS[0]);
+      drawCurve(colLQ[1], colLS[0]);
+      drawCurve(colLS[0], colFinal[0]);
+      
+      // Right side connections
+      for (let i = 0; i < 4; i++) {
+        drawCurve(colR16[i], colR32[2 * i]);
+        drawCurve(colR16[i], colR32[2 * i + 1]);
+      }
+      for (let i = 0; i < 2; i++) {
+        drawCurve(colRQ[i], colR16[2 * i]);
+        drawCurve(colRQ[i], colR16[2 * i + 1]);
+      }
+      drawCurve(colRS[0], colRQ[0]);
+      drawCurve(colRS[0], colRQ[1]);
+      drawCurve(colFinal[0], colRS[0]);
+    }
+  } else {
+    // Mobile layout connections
+    const cols = [
+      document.querySelectorAll('.r32-col-mobile .bracket-match'),
+      document.querySelectorAll('.r16-col-mobile .bracket-match'),
+      document.querySelectorAll('.qf-col-mobile .bracket-match'),
+      document.querySelectorAll('.sf-col-mobile .bracket-match'),
+      document.querySelectorAll('.final-col-mobile .bracket-match')
+    ];
+    
+    if (cols[0].length >= 16 && cols[1].length >= 8 && cols[2].length >= 4 && cols[3].length >= 2 && cols[4].length >= 1) {
+      for (let i = 0; i < 8; i++) {
+        drawCurve(cols[0][2 * i], cols[1][i]);
+        drawCurve(cols[0][2 * i + 1], cols[1][i]);
+      }
+      for (let i = 0; i < 4; i++) {
+        drawCurve(cols[1][2 * i], cols[2][i]);
+        drawCurve(cols[1][2 * i + 1], cols[2][i]);
+      }
+      for (let i = 0; i < 2; i++) {
+        drawCurve(cols[2][2 * i], cols[3][i]);
+        drawCurve(cols[2][2 * i + 1], cols[3][i]);
+      }
+      drawCurve(cols[3][0], cols[4][0]);
+      drawCurve(cols[3][1], cols[4][0]);
+    }
   }
-  
-  // Verbinde R16 -> QF (8 Spiele -> 4 Spiele)
-  for (let i = 0; i < 4; i++) {
-    drawCurve(cols[1][2 * i], cols[2][i]);
-    drawCurve(cols[1][2 * i + 1], cols[2][i]);
-  }
-  
-  // Verbinde QF -> SF (4 Spiele -> 2 Spiele)
-  for (let i = 0; i < 2; i++) {
-    drawCurve(cols[2][2 * i], cols[3][i]);
-    drawCurve(cols[2][2 * i + 1], cols[3][i]);
-  }
-  
-  // Verbinde SF -> Final (2 Spiele -> 1 Spiel)
-  drawCurve(cols[3][0], cols[4][0]);
-  drawCurve(cols[3][1], cols[4][0]);
 }
 
 window.addEventListener('resize', drawBracketLines);
