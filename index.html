@@ -2166,10 +2166,13 @@ function openCountryModal(tid) {
     
     let res='', rc='';
     if(fin){
-      if(parseInt(ms)>parseInt(os)){
+      const winner = getWinner(g);
+      const isWinner = isHome ? winner.home : winner.away;
+      const isLoser = isHome ? winner.away : winner.home;
+      if(isWinner){
         rc='color:var(--accent-green)';
         res='S';
-      }else if(parseInt(ms)<parseInt(os)){
+      }else if(isLoser){
         rc='color:var(--accent-red)';
         res='N';
       }else{
@@ -2188,11 +2191,31 @@ function openCountryModal(tid) {
     const tv = getGameBroadcaster(g);
     const tvText = '<span style="font-size:0.65rem;color:var(--text-muted);font-weight:700;margin-left:0.4rem;">(' + tv + ')</span>';
 
+    const winnerForHighlight = getWinner(g);
+    const isWForHighlight = isHome ? winnerForHighlight.home : winnerForHighlight.away;
+    const isLForHighlight = isHome ? winnerForHighlight.away : winnerForHighlight.home;
+
+    let scoreBoxHtml = '';
+    if (fin || live) {
+      const p = getPenaltyData(g);
+      if (p) {
+        const pLeft = isHome ? p.home : p.away;
+        const pRight = isHome ? p.away : p.home;
+        const totalLeft = (parseInt(ms) || 0) + pLeft;
+        const totalRight = (parseInt(os) || 0) + pRight;
+        scoreBoxHtml = `<span class="match-score">${ms}</span><span class="match-score-sep">:</span><span class="match-score">${os}</span><span class="penalty-score" style="font-size:0.75rem;color:var(--text-secondary);margin-left:0.35rem;font-weight:600;">(${totalLeft}:${totalRight} n.E.)</span>`;
+      } else {
+        scoreBoxHtml = `<span class="match-score">${ms}</span><span class="match-score-sep">:</span><span class="match-score">${os}</span>`;
+      }
+    } else {
+      scoreBoxHtml = `<span class="match-score" style="color:var(--text-muted);font-size:0.75rem">${ds}</span>`;
+    }
+
     return '<div class="match-item '+(!fin?'match-upcoming':'')+(live?' match-live':'')+'" onclick="closeModal(); setTimeout(()=>openMatchDetailModal(\''+g.id+'\'), 250)" style="cursor:pointer;">'
       +'<div style="font-size:0.6rem;color:var(--text-muted);width:70px;flex-shrink:0;text-transform:uppercase;">'+matchType+'</div>'
-      +'<div class="match-team"><img class="team-flag-sm" src="' + team.flag + '" alt="" loading="lazy"><span class="match-team-name" style="'+(fin&&parseInt(ms)>parseInt(os)?'font-weight:700;color:var(--accent-green)':'')+'">'+tn(team.name_en)+'</span></div>'
-      +'<div class="match-score-box">'+(fin||live?'<span class="match-score">'+ms+'</span><span class="match-score-sep">:</span><span class="match-score">'+os+'</span>':'<span class="match-score" style="color:var(--text-muted);font-size:0.75rem">'+ds+'</span>')+'</div>'
-      +'<div class="match-team right"><img class="team-flag-sm" src="'+oppFlag+'" alt="" loading="lazy"><span class="match-team-name" style="'+(fin&&parseInt(os)>parseInt(ms)?'font-weight:700;color:var(--accent-green)':'')+'">'+oppName+'</span></div>'
+      +'<div class="match-team"><img class="team-flag-sm" src="' + team.flag + '" alt="" loading="lazy"><span class="match-team-name" style="'+(isWForHighlight?'font-weight:700;color:var(--accent-green)':'')+'">'+tn(team.name_en)+'</span></div>'
+      +'<div class="match-score-box">'+scoreBoxHtml+'</div>'
+      +'<div class="match-team right"><img class="team-flag-sm" src="' + oppFlag + '" alt="" loading="lazy"><span class="match-team-name" style="'+(isLForHighlight?'font-weight:700;color:var(--accent-green)':'')+'">'+oppName+'</span></div>'
       +(fin?'<span style="'+rc+';font-weight:700;font-size:0.75rem;margin-left:0.25rem;width:12px;text-align:center;">'+res+'</span>':'')
       +tvText
       +'</div>';
@@ -2313,7 +2336,17 @@ function openPlayerProfileModal(teamId, playerName) {
       const oppId = isHome ? g.away_team_id : g.home_team_id;
       const opp = S.teams[oppId];
       const oppName = opp ? tn(opp.name_en) : (isHome ? g.away_team_name_en : g.home_team_name_en) || '?';
-      const scoreText = isHome ? `${g.home_score}:${g.away_score}` : `${g.away_score}:${g.home_score}`;
+      let scoreText = '';
+      const p = getPenaltyData(g);
+      if (p) {
+        const totalHome = (parseInt(g.home_score) || 0) + p.home;
+        const totalAway = (parseInt(g.away_score) || 0) + p.away;
+        scoreText = isHome ? 
+          `${g.home_score}:${g.away_score} (${totalHome}:${totalAway} n.E.)` : 
+          `${g.away_score}:${g.home_score} (${totalAway}:${totalHome} n.E.)`;
+      } else {
+        scoreText = isHome ? `${g.home_score}:${g.away_score}` : `${g.away_score}:${g.home_score}`;
+      }
       
       const gameType = g.type === 'group' ? 'Gruppe ' + g.group : 
                        g.type === 'r32' ? '16tel-Finale' : 
@@ -2384,13 +2417,17 @@ function renderMatchItem(g) {
   const hn = tn(ht?ht.name_en:(g.home_team_name_en||'?')), an = tn(at?at.name_en:(g.away_team_name_en||'?'));
   const hf = ht?ht.flag:'', af = at?at.flag:'';
   const fin = g.finished==='TRUE', live = g.time_elapsed&&g.time_elapsed!=='notstarted'&&g.time_elapsed!=='finished';
-  const hw = fin&&parseInt(g.home_score)>parseInt(g.away_score), aw = fin&&parseInt(g.away_score)>parseInt(g.home_score);
+  const winner = getWinner(g);
+  const hw = winner.home;
+  const aw = winner.away;
   const ds = fd(g.local_date, g.stadium_id);
   
   const tv = getGameBroadcaster(g);
   const tvText = '<span style="font-size:0.65rem;color:var(--text-muted);font-weight:700;margin-left:0.4rem;">(' + tv + ')</span>';
   
-  return '<div class="match-item '+(live?'match-live':!fin?'match-upcoming':'')+'" onclick="openMatchDetailModal(\''+g.id+'\')" style="cursor:pointer"><div class="match-team"><img class="team-flag-sm" src="'+hf+'" alt="" loading="lazy"><span class="match-team-name '+(hw?'match-win-home':'')+'">'+hn+'</span></div><div class="match-score-box">'+(fin||live?'<span class="match-score '+(hw?'match-win-home':'')+'">'+g.home_score+'</span><span class="match-score-sep">:</span><span class="match-score '+(aw?'match-win-away':'')+'">'+g.away_score+'</span>':'<span class="match-score" style="color:var(--text-muted);font-size:0.72rem">'+ds+'</span>')+'</div><div class="match-team right"><img class="team-flag-sm" src="'+af+'" alt="" loading="lazy"><span class="match-team-name '+(aw?'match-win-away':'')+'">'+an+'</span></div>' + tvText + '</div>';
+  const scoreBoxHtml = fin || live ? formatMatchScoreHTML(g, hw, aw) : '<span class="match-score" style="color:var(--text-muted);font-size:0.72rem">' + ds + '</span>';
+  
+  return '<div class="match-item '+(live?'match-live':!fin?'match-upcoming':'')+'" onclick="openMatchDetailModal(\''+g.id+'\')" style="cursor:pointer"><div class="match-team"><img class="team-flag-sm" src="'+hf+'" alt="" loading="lazy"><span class="match-team-name '+(hw?'match-win-home':'')+'">'+hn+'</span></div><div class="match-score-box">'+scoreBoxHtml+'</div><div class="match-team right"><img class="team-flag-sm" src="'+af+'" alt="" loading="lazy"><span class="match-team-name '+(aw?'match-win-away':'')+'">'+an+'</span></div>' + tvText + '</div>';
 }
 
 function cleanPlayerName(name) {
@@ -2502,7 +2539,19 @@ function openMatchDetailModal(gameId) {
   const tv = getGameBroadcaster(g);
   const tvInfo = '<div style="margin-top:0.75rem;font-size:0.8rem;font-weight:700;color:var(--accent-blue);">Übertragung: ' + tv + '</div>';
 
-  const content = '<div class="modal-header"><span class="modal-title">' + matchType + '</span><button class="modal-close" onclick="closeModal()">&#x2715;</button></div><div class="modal-body" style="text-align:center;"><div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:1rem;text-transform:uppercase;letter-spacing:0.05em;">' + ds + ' &middot; ' + statusBadge + '</div><div class="match-detail-row"><div ' + (ht ? 'onclick="closeModal(); setTimeout(()=>openCountryModal(\''+ht.id+'\'), 250)" style="cursor:pointer;"' : '') + ' class="match-detail-team left-team"><span class="match-detail-name">' + hn + '</span>' + (hf ? '<img src="' + hf + '" class="match-detail-flag" alt="">' : '') + '</div><div class="match-detail-score-box">' + (fin || live ? g.home_score + ' : ' + g.away_score : 'vs') + '</div><div ' + (at ? 'onclick="closeModal(); setTimeout(()=>openCountryModal(\''+at.id+'\'), 250)" style="cursor:pointer;"' : '') + ' class="match-detail-team right-team">' + (af ? '<img src="' + af + '" class="match-detail-flag" alt="">' : '') + '<span class="match-detail-name">' + an + '</span></div></div>' + scorersHtml + tvInfo + (g.stadium_id && g.stadium_id !== 'null' ? '<div style="margin-top:1.5rem;font-size:0.72rem;color:var(--text-muted);">Stadion ID: ' + g.stadium_id + '</div>' : '') + '</div>';
+  let scoreBoxHtml = 'vs';
+  if (fin || live) {
+    const p = getPenaltyData(g);
+    if (p) {
+      const totalHome = (parseInt(g.home_score) || 0) + p.home;
+      const totalAway = (parseInt(g.away_score) || 0) + p.away;
+      scoreBoxHtml = `${g.home_score} : ${g.away_score}<div style="font-size:0.85rem;color:var(--text-secondary);font-weight:600;margin-top:0.25rem;">(${totalHome}:${totalAway} n.E.)</div>`;
+    } else {
+      scoreBoxHtml = `${g.home_score} : ${g.away_score}`;
+    }
+  }
+
+  const content = '<div class="modal-header"><span class="modal-title">' + matchType + '</span><button class="modal-close" onclick="closeModal()">&#x2715;</button></div><div class="modal-body" style="text-align:center;"><div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:1rem;text-transform:uppercase;letter-spacing:0.05em;">' + ds + ' &middot; ' + statusBadge + '</div><div class="match-detail-row"><div ' + (ht ? 'onclick="closeModal(); setTimeout(()=>openCountryModal(\''+ht.id+'\'), 250)" style="cursor:pointer;"' : '') + ' class="match-detail-team left-team"><span class="match-detail-name">' + hn + '</span>' + (hf ? '<img src="' + hf + '" class="match-detail-flag" alt="">' : '') + '</div><div class="match-detail-score-box">' + scoreBoxHtml + '</div><div ' + (at ? 'onclick="closeModal(); setTimeout(()=>openCountryModal(\''+at.id+'\'), 250)" style="cursor:pointer;"' : '') + ' class="match-detail-team right-team">' + (af ? '<img src="' + af + '" class="match-detail-flag" alt="">' : '') + '<span class="match-detail-name">' + an + '</span></div></div>' + scorersHtml + tvInfo + (g.stadium_id && g.stadium_id !== 'null' ? '<div style="margin-top:1.5rem;font-size:0.72rem;color:var(--text-muted);">Stadion ID: ' + g.stadium_id + '</div>' : '') + '</div>';
   showModal(content);
 }
 
@@ -2780,6 +2829,55 @@ function drawBracketLines() {
   }
 }
 
+function getPenaltyData(g) {
+  if (!g) return null;
+  const hp = g.home_penalty !== undefined ? g.home_penalty : g.home_penalty_score;
+  const ap = g.away_penalty !== undefined ? g.away_penalty : g.away_penalty_score;
+  if (hp !== undefined && hp !== null && hp !== '' && hp !== 'null' && hp !== 0 && hp !== '0' &&
+      ap !== undefined && ap !== null && ap !== '' && ap !== 'null' && ap !== 0 && ap !== '0') {
+    return { home: parseInt(hp), away: parseInt(ap) };
+  }
+  return null;
+}
+
+function getWinner(g) {
+  if (g.finished !== 'TRUE') return { home: false, away: false };
+  const p = getPenaltyData(g);
+  if (p) {
+    const totalHome = (parseInt(g.home_score) || 0) + p.home;
+    const totalAway = (parseInt(g.away_score) || 0) + p.away;
+    return { home: totalHome > totalAway, away: totalAway > totalHome };
+  }
+  const hs = parseInt(g.home_score) || 0;
+  const as = parseInt(g.away_score) || 0;
+  return { home: hs > as, away: as > hs };
+}
+
+function formatMatchScoreHTML(g, homeWinner, awayWinner) {
+  const p = getPenaltyData(g);
+  const hScore = g.home_score;
+  const aScore = g.away_score;
+  
+  if (p) {
+    const totalHome = (parseInt(hScore) || 0) + p.home;
+    const totalAway = (parseInt(aScore) || 0) + p.away;
+    return `
+      <span class="match-score ${homeWinner ? 'match-win-home' : ''}">${hScore}</span>
+      <span class="match-score-sep">:</span>
+      <span class="match-score ${awayWinner ? 'match-win-away' : ''}">${aScore}</span>
+      <span class="penalty-score" style="font-size:0.75rem;color:var(--text-secondary);margin-left:0.35rem;font-weight:600;">
+        (${totalHome}:${totalAway} n.E.)
+      </span>
+    `;
+  }
+  
+  return `
+    <span class="match-score ${homeWinner ? 'match-win-home' : ''}">${hScore}</span>
+    <span class="match-score-sep">:</span>
+    <span class="match-score ${awayWinner ? 'match-win-away' : ''}">${aScore}</span>
+  `;
+}
+
 window.addEventListener('resize', drawBracketLines);
 
 function resolveTeam(id, label, gw, gr, gameId, depth = 0) {
@@ -2841,9 +2939,8 @@ function resolveTeam(id, label, gw, gr, gameId, depth = 0) {
         
         let resolvedId = null;
         if (isFinished) {
-          const hs = parseInt(prevGame.home_score) || 0;
-          const as = parseInt(prevGame.away_score) || 0;
-          resolvedId = hs > as ? prevHtid : prevAtid;
+          const winner = getWinner(prevGame);
+          resolvedId = winner.home ? prevHtid : prevAtid;
         } else {
           // Game is live: Prognose!
           const hs = parseInt(prevGame.home_score) || 0;
@@ -2875,9 +2972,8 @@ function resolveTeam(id, label, gw, gr, gameId, depth = 0) {
         
         let resolvedId = null;
         if (isFinished) {
-          const hs = parseInt(prevGame.home_score) || 0;
-          const as = parseInt(prevGame.away_score) || 0;
-          resolvedId = hs > as ? prevAtid : prevHtid;
+          const winner = getWinner(prevGame);
+          resolvedId = winner.home ? prevAtid : prevHtid;
         } else {
           // Game is live: Prognose!
           const hs = parseInt(prevGame.home_score) || 0;
@@ -2902,27 +2998,39 @@ function renderBracketMatch(game, gw, gr, inlineStyle = '', isThird = false) {
   const htid = resolveTeam(game.home_team_id, game.home_team_label, gw, gr, game.id);
   const atid = resolveTeam(game.away_team_id, game.away_team_label, gw, gr, game.id);
   const ht = htid?S.teams[htid]:null, at = atid?S.teams[atid]:null;
-  const hw = fin&&parseInt(game.home_score)>parseInt(game.away_score);
-  const aw = fin&&parseInt(game.away_score)>parseInt(game.home_score);
+  const winner = getWinner(game);
+  const hw = winner.home;
+  const aw = winner.away;
   const isPredH = !fin && htid && resolvedPredictions[game.id + '_' + game.home_team_label];
   const isPredA = !fin && atid && resolvedPredictions[game.id + '_' + game.away_team_label];
   const ds = fd(game.local_date, game.stadium_id);
-  const teamRow = (team, label, score, isW, isL, isPred) => {
+  const teamRow = (team, label, score, isW, isL, isPred, isHomeTeam) => {
     if(!team) return '<div class="bracket-team"><span class="bracket-team-name bracket-tbd">noch offen</span></div>';
+    
+    let scoreDisplay = score;
+    if (fin) {
+      const p = getPenaltyData(game);
+      if (p) {
+        const penaltyVal = isHomeTeam ? p.home : p.away;
+        const totalScore = (parseInt(score) || 0) + penaltyVal;
+        scoreDisplay = `${score} (${totalScore})`;
+      }
+    }
+
     return '<div class="bracket-team'+(isW?' winner':'')+(isL?' loser':'')+(isPred?' predicted':'')+'">'
       +(team?'<img class="bracket-team-flag" src="'+team.flag+'" alt="" loading="lazy">':'')
       +'<span class="bracket-team-name" style="'+(isPred?'color:var(--accent-blue);font-style:italic':'')+'">'
       +tn(team.name_en)
       +(isPred?' <small style="font-size:0.6rem;opacity:0.7">(Prognose)</small>':'')
       +'</span>'
-      +(fin?'<span class="bracket-team-score">'+score+'</span>':'')
+      +(fin?'<span class="bracket-team-score">'+scoreDisplay+'</span>':'')
       +'</div>';
   };
   const extraClass = isThird ? ' no-line' : '';
   const finalClass = (game.type === 'final') ? ' final-match' : (game.type === 'third') ? ' third-match' : '';
   return '<div class="bracket-match' + extraClass + finalClass + '" onclick="openMatchDetailModal(\''+game.id+'\')" style="cursor:pointer; ' + inlineStyle + '">'
-    +teamRow(ht,game.home_team_label,game.home_score,hw,fin&&!hw,isPredH)
-    +teamRow(at,game.away_team_label,game.away_score,aw,fin&&!aw,isPredA)
+    +teamRow(ht,game.home_team_label,game.home_score,hw,fin&&!hw,isPredH,true)
+    +teamRow(at,game.away_team_label,game.away_score,aw,fin&&!aw,isPredA,false)
     +'<div class="bracket-meta">'+(fin?'&#10003; Gespielt':'&#128197; '+ds)+'</div>'
     +'</div>';
 }
@@ -3000,7 +3108,9 @@ function renderMatchCard(g) {
   const hf = ht?ht.flag:'', af = at?at.flag:'';
   const fin = g.finished==='TRUE', live = g.time_elapsed&&g.time_elapsed!=='notstarted'&&g.time_elapsed!=='finished';
   const upcoming = !fin && !live;
-  const hw = fin&&parseInt(g.home_score)>parseInt(g.away_score), aw = fin&&parseInt(g.away_score)>parseInt(g.home_score);
+  const winner = getWinner(g);
+  const hw = winner.home;
+  const aw = winner.away;
   const ds = fd(g.local_date, g.stadium_id);
   
   const tv = getGameBroadcaster(g);
@@ -3008,11 +3118,25 @@ function renderMatchCard(g) {
   const tvColor = isAvailable ? 'var(--text-secondary)' : 'var(--text-muted)';
   const tvText = '<span class="tv-badge" style="background:var(--bg-primary);border:1px solid var(--border-bright);color:' + tvColor + ';font-size:0.65rem;padding:0.1rem 0.35rem;border-radius:4px;margin-top:0.2rem;font-weight:700;display:inline-block;">TV: ' + tv + '</span>';
   
+  let scoreHtml = 'vs';
+  if (fin || live) {
+    const p = getPenaltyData(g);
+    if (p) {
+      const totalHome = (parseInt(g.home_score) || 0) + p.home;
+      const totalAway = (parseInt(g.away_score) || 0) + p.away;
+      scoreHtml = `<span class="match-card-score">${g.home_score} : ${g.away_score}</span><div style="font-size:0.75rem;color:var(--text-secondary);font-weight:700;margin-top:0.15rem;">(${totalHome}:${totalAway} n.E.)</div>`;
+    } else {
+      scoreHtml = `<span class="match-card-score">${g.home_score} : ${g.away_score}</span>`;
+    }
+  } else {
+    scoreHtml = '<span class="match-card-score" style="color:var(--text-muted);font-size:1rem">vs</span>';
+  }
+
   return '<div class="match-card'+(live?' match-live':'')+(upcoming?' match-upcoming':'')+'" onclick="openMatchDetailModal(\''+g.id+'\')" style="cursor:pointer">\
 <div class="match-card-team">'
 +(hf?'<img class="match-card-flag" src="'+hf+'" alt="" loading="lazy">':'')
 +'<span class="match-card-name" style="'+(hw?'color:var(--accent-green)':'')+'">'+hn+'</span></div>\
-<div class="match-card-center">'+(fin||live?'<span class="match-card-score">'+g.home_score+' : '+g.away_score+'</span>':'<span class="match-card-score" style="color:var(--text-muted);font-size:1rem">vs</span>')
+<div class="match-card-center">'+scoreHtml
 +'<span class="match-card-info">'+(live?'<span style="color:var(--accent-red);font-weight:700">LIVE</span>':fin?'&#10003; Beendet':ds)+'</span>'
 +tvText
 +(g.type==='group'?'<span class="group-tag">Gr. '+g.group+'</span>':'')+'</div>\
@@ -3337,8 +3461,19 @@ function renderGermanyDashboard() {
     
     let scoreText = '<span style="color:var(--text-muted);font-size:0.8rem;font-weight:600;">' + ds + '</span>';
     if (fin || live) {
-      const wStyle = parseInt(ms) > parseInt(os) ? 'color:var(--accent-green);font-weight:700;' : parseInt(ms) < parseInt(os) ? 'color:var(--accent-red);' : '';
-      scoreText = '<span style="font-size:1.1rem;font-weight:900;' + wStyle + '">' + g.home_score + ' : ' + g.away_score + '</span>';
+      const winner = getWinner(g);
+      const isWinner = isHome ? winner.home : winner.away;
+      const isLoser = isHome ? winner.away : winner.home;
+      const wStyle = isWinner ? 'color:var(--accent-green);font-weight:700;' : isLoser ? 'color:var(--accent-red);' : '';
+      
+      const p = getPenaltyData(g);
+      if (p) {
+        const totalHome = (parseInt(g.home_score) || 0) + p.home;
+        const totalAway = (parseInt(g.away_score) || 0) + p.away;
+        scoreText = '<span style="font-size:1.1rem;font-weight:900;' + wStyle + '">' + g.home_score + ' : ' + g.away_score + '</span><small style="font-size:0.65rem;color:var(--text-secondary);font-weight:600;display:block;margin-top:0.1rem;">(' + totalHome + ':' + totalAway + ' n.E.)</small>';
+      } else {
+        scoreText = '<span style="font-size:1.1rem;font-weight:900;' + wStyle + '">' + g.home_score + ' : ' + g.away_score + '</span>';
+      }
     }
     
     const tvBadge = '<span style="font-size:0.65rem;background:var(--bg-primary);border:1px solid var(--border-bright);padding:0.1rem 0.4rem;border-radius:4px;color:var(--text-secondary);font-weight:700;margin-top:0.2rem;display:inline-block;">TV: ' + tv + '</span>';
@@ -3349,12 +3484,16 @@ function renderGermanyDashboard() {
                       g.type === 'sf' ? 'Halbfinale' :
                       g.type === 'third' ? 'Spiel um Platz 3' : 'Finale';
     
+    const winnerForHighlight = getWinner(g);
+    const isWForHighlight = isHome ? winnerForHighlight.home : winnerForHighlight.away;
+    const isLForHighlight = isHome ? winnerForHighlight.away : winnerForHighlight.home;
+
     return '<div class="match-item ' + (live ? 'match-live' : !fin ? 'match-upcoming' : '') + '" onclick="openMatchDetailModal(\'' + g.id + '\')" style="cursor:pointer;padding:0.75rem 1rem;margin-bottom:0.6rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);">'
       + '<div style="font-size:0.6rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.25rem;font-weight:700;">' + gameLabel + '</div>'
       + '<div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;">'
-        + '<div class="match-team" style="flex:1;"><img class="team-flag-sm" src="' + team.flag + '" alt=""><span class="match-team-name" style="' + (fin && parseInt(ms)>parseInt(os) ? 'font-weight:700;color:var(--accent-green);' : '') + '">Deutschland</span></div>'
+        + '<div class="match-team" style="flex:1;"><img class="team-flag-sm" src="' + team.flag + '" alt=""><span class="match-team-name" style="' + (fin && isWForHighlight ? 'font-weight:700;color:var(--accent-green);' : '') + '">Deutschland</span></div>'
         + '<div style="display:flex;flex-direction:column;align-items:center;min-width:70px;">' + scoreText + (live ? '<small style="color:var(--accent-red);font-weight:700;font-size:0.65rem;margin-top:0.1rem;">LIVE</small>' : '') + tvBadge + '</div>'
-        + '<div class="match-team right" style="flex:1;flex-direction:row-reverse;text-align:right;"><img class="team-flag-sm" src="' + oppFlag + '" alt=""><span class="match-team-name" style="' + (fin && parseInt(os)>parseInt(ms) ? 'font-weight:700;color:var(--accent-green);' : '') + '">' + oppName + '</span></div>'
+        + '<div class="match-team right" style="flex:1;flex-direction:row-reverse;text-align:right;"><img class="team-flag-sm" src="' + oppFlag + '" alt=""><span class="match-team-name" style="' + (fin && isLForHighlight ? 'font-weight:700;color:var(--accent-green);' : '') + '">' + oppName + '</span></div>'
       + '</div>'
       + '</div>';
   }).join('');
