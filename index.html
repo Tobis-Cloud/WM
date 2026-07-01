@@ -1184,6 +1184,120 @@
       color: var(--accent-blue);
       font-size: 1.3rem;
     }
+    .game-timer-container {
+      width: 100%;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+    .game-timer-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+      width: 100%;
+      transition: width 0.1s linear;
+    }
+    .flag-options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      width: 100%;
+      margin-top: 1rem;
+    }
+    .flag-option-card {
+      background: var(--bg-primary);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      aspect-ratio: 3/2;
+    }
+    .flag-option-card:hover:not(.disabled) {
+      border-color: var(--accent-blue);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+    .flag-option-card.correct-anim {
+      border-color: var(--accent-green) !important;
+      background: var(--accent-green-dim) !important;
+      animation: flag-correct-pulse 0.4s ease;
+    }
+    .flag-option-card.incorrect-anim {
+      border-color: var(--accent-red) !important;
+      background: var(--accent-red-dim) !important;
+      animation: flag-incorrect-shake 0.4s ease;
+    }
+    @keyframes flag-correct-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+    @keyframes flag-incorrect-shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    .flag-option-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+    .game-mode-switch {
+      display: inline-flex;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 0.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .game-mode-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 0.5rem 1.25rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .game-mode-btn.active {
+      background: var(--accent-blue);
+      color: #fff;
+    }
+    .country-option-btn {
+      background: var(--bg-primary);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+      width: 100%;
+    }
+    .country-option-btn:hover:not(.disabled) {
+      border-color: var(--accent-blue);
+      background: var(--bg-card-hover);
+    }
+    .country-option-btn.correct-anim {
+      border-color: var(--accent-green) !important;
+      background: var(--accent-green-dim) !important;
+      animation: flag-correct-pulse 0.4s ease;
+    }
+    .country-option-btn.incorrect-anim {
+      border-color: var(--accent-red) !important;
+      background: var(--accent-red-dim) !important;
+      animation: flag-incorrect-shake 0.4s ease;
+    }
   </style>
 </head>
 <body>
@@ -1270,23 +1384,26 @@ const API = 'https://worldcup26.ir/get';
 let S = { teams:{}, groups:[], games:[], loaded:false };
 let flagCache = {};
 let thirdAssignments = {};
-let showOldGames = false;
+let visibleOldGamesCount = 0;
 let hideGroupGames = false;
 let resolvedPredictions = {};
 let updateIntervalId = null;
 
-function isOlderThanOneDay(localDateStr) {
-  if (!localDateStr) return false;
+function getAgeInDays(localDateStr) {
+  if (!localDateStr) return 0;
   const matchDate = new Date(localDateStr);
-  if (isNaN(matchDate.getTime())) return false;
+  if (isNaN(matchDate.getTime())) return 0;
   const now = new Date();
   const diffTime = now.getTime() - matchDate.getTime();
-  const diffDays = diffTime / (1000 * 60 * 60 * 24);
-  return diffDays > 1; // Älter als 1 Tag
+  return diffTime / (1000 * 60 * 60 * 24);
 }
 
-function toggleOldGames() {
-  showOldGames = !showOldGames;
+function isOlderThanOneDay(localDateStr) {
+  return getAgeInDays(localDateStr) > 1;
+}
+
+function unfoldOldGames() {
+  visibleOldGamesCount += 3;
   renderMatches();
 }
 
@@ -1670,6 +1787,8 @@ function switchTab(t) {
     cancelAnimationFrame(window.currentConfettiAnimation);
     window.currentConfettiAnimation = null;
   }
+  
+  localStorage.setItem('activeTab', t);
 
   document.querySelectorAll('.tab-btn').forEach(x => {
     x.classList.remove('active');
@@ -1744,7 +1863,7 @@ function handleSwipe() {
     
     if (diffX < 0) {
       const screenWidth = window.innerWidth;
-      const startFromRightEdge = (screenWidth - touchStartX) < (screenWidth * 0.20);
+      const startFromRightEdge = (screenWidth - touchStartX) < 30;
       if (!isOpen && startFromRightEdge) {
         toggleMobileMenu();
       }
@@ -3039,66 +3158,85 @@ function renderMatches() {
   const c = document.getElementById('matchesContainer');
   if(!c||!S.loaded) return;
   
+  // Save scroll height and scroll position before rendering
+  const prevScrollHeight = document.documentElement.scrollHeight;
+  const prevScrollTop = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
+  
   const groupGames = S.games.filter(g=>g.type==='group').sort((a,b)=>pd(a.local_date)-pd(b.local_date));
   
-  // Berechne die Anzahl der ausgeblendeten alten Spiele dynamisch
-  const oldGroupGamesCount = hideGroupGames ? 0 : groupGames.filter(g => isOlderThanOneDay(g.local_date)).length;
-  
-  let oldKoGamesCount = 0;
+  // Build a list of all rendered games in order of rendering
+  const allRenderedGames = [];
+  if (!hideGroupGames) {
+    allRenderedGames.push(...groupGames);
+  }
   const koTypes = [['r32','16tel-Finale'],['r16','Achtelfinale'],['qf','Viertelfinale'],['sf','Halbfinale'],['third','Spiel um Platz 3'],['final','&#127942; Finale']];
-  koTypes.forEach(([type,label]) => {
-    const gs = S.games.filter(g=>g.type===type);
-    oldKoGamesCount += gs.filter(g => isOlderThanOneDay(g.local_date)).length;
+  koTypes.forEach(([type]) => {
+    const gs = S.games.filter(g=>g.type===type).sort((a,b)=>parseInt(a.id)-parseInt(b.id));
+    allRenderedGames.push(...gs);
   });
   
-  const totalOldGamesCount = oldGroupGamesCount + oldKoGamesCount;
+  // Identify which games are "old" (older than 1 day)
+  const oldGames = allRenderedGames.filter(g => isOlderThanOneDay(g.local_date));
+  
+  // Define which old games are visible based on unfold count
+  const visibleOldGames = new Set(oldGames.slice(Math.max(0, oldGames.length - visibleOldGamesCount)));
+  
+  const getGameVisibility = (g) => {
+    if (!isOlderThanOneDay(g.local_date)) return true;
+    return visibleOldGames.has(g);
+  };
   
   let html = '';
   
-  if (totalOldGamesCount > 0) {
-    html += '<div class="old-games-banner" style="display:flex;flex-direction:column;align-items:center;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.5rem;text-align:center;gap:0.75rem;">'
-      + '<p style="font-size:0.9rem;color:var(--text-secondary);font-weight:500;">⚽ ' + totalOldGamesCount + ' vergangene Spiele wurden ausgeblendet.</p>'
-      + '<button class="tab-btn" onclick="toggleOldGames()" style="max-width:240px;background:var(--accent-blue-dim);border-color:rgba(59,130,246,0.3);color:var(--accent-blue);font-weight:700;">'
-        + '<span>' + (showOldGames ? 'Alte Spiele ausblenden' : 'Alte Spiele anzeigen') + '</span>'
+  // Banner button at the top if there are remaining hidden old games
+  const remainingHidden = oldGames.length - visibleOldGames.size;
+  if (remainingHidden > 0) {
+    const showCount = Math.min(3, remainingHidden);
+    html += '<div class="old-games-banner" style="display:flex;justify-content:center;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem;margin-bottom:1.5rem;">'
+      + '<button class="tab-btn" onclick="unfoldOldGames()" style="background:var(--accent-blue-dim);border-color:rgba(59,130,246,0.3);color:var(--accent-blue);font-weight:700;padding:0.5rem 1.5rem;">'
+        + '<span>⚽ ' + showCount + ' ältere Spiele anzeigen</span>'
       + '</button>'
       + '</div>';
   }
   
   if (!hideGroupGames) {
-    html += '<div class="section-header"><span class="section-title">Gruppenphase</span><span class="section-count">'+groupGames.length+' Spiele</span></div>';
-    
     const byDate = {};
     groupGames.forEach(g => {
-      const isOld = isOlderThanOneDay(g.local_date);
-      if (isOld && !showOldGames) return;
+      if (!getGameVisibility(g)) return;
       
       const d=(g.local_date||'').split(' ')[0];
       if(!byDate[d]) byDate[d]=[];
       byDate[d].push(g);
     });
     
-    Object.keys(byDate).sort().forEach(date => {
-      const gs = byDate[date];
-      html += '<div class="matchday-section" data-date="'+date+'"><div class="matchday-header"><span class="matchday-title">'+fdf(date)+'</span><span class="matchday-date">'+gs.length+' Spiele</span></div>'+gs.map(g=>renderMatchCard(g)).join('')+'</div>';
-    });
+    const sortedDates = Object.keys(byDate).sort();
+    if (sortedDates.length > 0) {
+      html += '<div class="section-header"><span class="section-title">Gruppenphase</span><span class="section-count">'+groupGames.length+' Spiele</span></div>';
+      sortedDates.forEach(date => {
+        const gs = byDate[date];
+        html += '<div class="matchday-section" data-date="'+date+'"><div class="matchday-header"><span class="matchday-title">'+fdf(date)+'</span><span class="matchday-date">'+gs.length+' Spiele</span></div>'+gs.map(g=>renderMatchCard(g)).join('')+'</div>';
+      });
+    }
   }
   
   koTypes.forEach(([type,label]) => {
     const gs = S.games.filter(g=>g.type===type).sort((a,b)=>parseInt(a.id)-parseInt(b.id));
     if(!gs.length) return;
     
-    const displayedKo = gs.filter(g => {
-      if (showOldGames) return true;
-      return !isOlderThanOneDay(g.local_date);
-    });
-    
-    const renderList = showOldGames ? gs : displayedKo;
+    const renderList = gs.filter(getGameVisibility);
     if (renderList.length > 0) {
       html += '<div class="section-header" style="margin-top:2rem"><span class="section-title">'+label+'</span><span class="section-count">'+renderList.length+' Spiele</span></div>'+renderList.map(g=>renderMatchCard(g)).join('');
     }
   });
   
   c.innerHTML = html;
+  
+  // Anchor the scroll position so that prepend content expands upwards without shifting the viewport
+  const newScrollHeight = document.documentElement.scrollHeight;
+  const heightDiff = newScrollHeight - prevScrollHeight;
+  if (heightDiff > 0 && prevScrollTop > 0) {
+    window.scrollTo(0, prevScrollTop + heightDiff);
+  }
 }
 
 function renderMatchCard(g) {
@@ -3541,6 +3679,7 @@ function renderGermanyDashboard() {
 // ==========================================
 let game = {
   active: false,
+  mode: 'classic', // 'classic' or 'time'
   roundCount: 10,
   currentRound: 0,
   score: 0,
@@ -3548,7 +3687,20 @@ let game = {
   bestStreak: 0,
   roundsToPlay: [],
   currentTeam: null,
-  answered: false
+  answered: false,
+  timeLimit: 60,
+  timeLeft: 60,
+  timerInterval: null,
+  
+  // New rules
+  minusPoints: false,
+  suddenDeath: false,
+  questionType: 'find_flag', // 'find_flag' (show country -> choose flag) or 'find_country' (show flag -> choose country)
+  
+  // Classic mode hints
+  jokersLimit: 0,
+  jokersLeft: 0,
+  jokerClicksInRound: 0
 };
 
 const COUNTRY_ALIASES = {
@@ -3583,6 +3735,11 @@ function initFlagGame() {
   renderGameSetup();
 }
 
+function changeGameMode(mode) {
+  game.mode = mode;
+  renderGameSetup();
+}
+
 function renderGameSetup() {
   const container = document.getElementById('viewFlagGame');
   if (!container) return;
@@ -3590,7 +3747,7 @@ function renderGameSetup() {
   const savedBest = localStorage.getItem('wm2026_best_streak') || 0;
   game.bestStreak = parseInt(savedBest);
   
-  // Generiere die Optionen von 1 bis 48 dynamisch in 1er-Schritten
+  // Generiere die Optionen von 1 bis 48
   let selectOptions = '';
   for (let i = 1; i <= 48; i++) {
     const selected = i === 10 ? 'selected' : '';
@@ -3598,6 +3755,24 @@ function renderGameSetup() {
     selectOptions += `<option value="${i}" ${selected}>${label}</option>`;
   }
   selectOptions += `<option value="infinite">Endlos-Modus</option>`;
+  
+  // Generiere die Zeitoptionen
+  let timeSelectOptions = '';
+  for (let s = 60; s <= 300; s += 10) {
+    const mins = Math.floor(s / 60);
+    const secs = s % 60;
+    const timeLabel = `${mins}:${secs === 0 ? '00' : secs} Min (${s} Sek)`;
+    const selected = s === 60 ? 'selected' : '';
+    timeSelectOptions += `<option value="${s}" ${selected}>${timeLabel}</option>`;
+  }
+  
+  // Generiere die Jokeroptionen
+  let jokerOptions = '';
+  for (let j = 0; j <= 5; j++) {
+    const selected = j === 1 ? 'selected' : '';
+    jokerOptions += `<option value="${j}" ${selected}>${j} Joker</option>`;
+  }
+  jokerOptions += `<option value="10">10 Joker</option>`;
   
   container.innerHTML = `
     <div class="status-bar">
@@ -3608,11 +3783,51 @@ function renderGameSetup() {
       <h2 class="game-setup-title">Flaggen-Raten</h2>
       <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:1.5rem;">Erkenne die Flaggen aller 48 Nationen der FIFA WM 2026!</p>
       
-      <div style="text-align:left; max-width:300px; margin:0 auto;">
-        <label class="game-select-label" for="roundsSelect">Anzahl der Flaggen:</label>
-        <select id="roundsSelect" class="game-select">
-          ${selectOptions}
-        </select>
+      <div style="text-align:center;">
+        <div class="game-mode-switch">
+          <button class="game-mode-btn ${game.mode === 'classic' ? 'active' : ''}" onclick="changeGameMode('classic')">Klassisch</button>
+          <button class="game-mode-btn ${game.mode === 'time' ? 'active' : ''}" onclick="changeGameMode('time')">Zeitmodus</button>
+        </div>
+      </div>
+      
+      <div style="text-align:left; max-width:320px; margin:0 auto 1.5rem; display:flex; flex-direction:column; gap:1rem;">
+        ${game.mode === 'classic' ? `
+          <div>
+            <label class="game-select-label" for="roundsSelect">Anzahl der Flaggen:</label>
+            <select id="roundsSelect" class="game-select">
+              ${selectOptions}
+            </select>
+          </div>
+          <div>
+            <label class="game-select-label" for="jokersSelect">Joker für Anfangsbuchstaben:</label>
+            <select id="jokersSelect" class="game-select">
+              ${jokerOptions}
+            </select>
+          </div>
+        ` : `
+          <div>
+            <label class="game-select-label" for="timeSelect">Zeitlimit:</label>
+            <select id="timeSelect" class="game-select">
+              ${timeSelectOptions}
+            </select>
+          </div>
+          <div>
+            <label class="game-select-label" for="questionTypeSelect">Fragetyp:</label>
+            <select id="questionTypeSelect" class="game-select">
+              <option value="find_flag" selected>Flagge wählen (Land vorgegeben)</option>
+              <option value="find_country">Land wählen (Flagge vorgegeben)</option>
+            </select>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.25rem;">
+            <input type="checkbox" id="minusPointsCheckbox" style="cursor:pointer;" />
+            <label for="minusPointsCheckbox" style="font-size:0.85rem; color:var(--text-secondary); cursor:pointer; font-weight:600;">Minuspunkte bei Fehlern (-1)</label>
+          </div>
+        `}
+        
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <input type="checkbox" id="suddenDeathCheckbox" style="cursor:pointer;" />
+          <label for="suddenDeathCheckbox" style="font-size:0.85rem; color:var(--text-secondary); cursor:pointer; font-weight:600;">Hardcore-Modus (Sudden Death 💀)</label>
+        </div>
       </div>
       
       <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">
@@ -3630,9 +3845,6 @@ function startFlagGame() {
     return;
   }
   
-  const select = document.getElementById('roundsSelect');
-  const mode = select ? select.value : '10';
-  
   const allTeams = Object.values(S.teams);
   if (allTeams.length === 0) {
     alert("Keine Teams gefunden.");
@@ -3645,16 +3857,66 @@ function startFlagGame() {
   game.currentRound = 0;
   game.answered = false;
   
-  if (mode === 'infinite') {
-    game.roundCount = Infinity;
-    game.roundsToPlay = shuffleArray([...allTeams]);
-  } else {
-    game.roundCount = parseInt(mode);
-    const shuffled = shuffleArray([...allTeams]);
-    game.roundsToPlay = shuffled.slice(0, game.roundCount);
-  }
+  game.suddenDeath = document.getElementById('suddenDeathCheckbox') ? document.getElementById('suddenDeathCheckbox').checked : false;
   
-  nextGameRound();
+  if (game.mode === 'time') {
+    game.minusPoints = document.getElementById('minusPointsCheckbox') ? document.getElementById('minusPointsCheckbox').checked : false;
+    game.questionType = document.getElementById('questionTypeSelect') ? document.getElementById('questionTypeSelect').value : 'find_flag';
+    
+    const select = document.getElementById('timeSelect');
+    const limit = select ? parseInt(select.value) : 60;
+    game.timeLimit = limit;
+    game.timeLeft = limit;
+    game.roundsToPlay = shuffleArray([...allTeams]);
+    game.currentTeam = game.roundsToPlay[0];
+    
+    // Timer initialisieren
+    if (game.timerInterval) clearInterval(game.timerInterval);
+    game.timerInterval = setInterval(() => {
+      game.timeLeft -= 0.1;
+      if (game.timeLeft <= 0) {
+        game.timeLeft = 0;
+        clearInterval(game.timerInterval);
+        endFlagGame();
+      } else {
+        updateTimerDisplay();
+      }
+    }, 100);
+    
+    renderGameScreen();
+  } else {
+    game.jokersLimit = parseInt(document.getElementById('jokersSelect') ? document.getElementById('jokersSelect').value : '0');
+    game.jokersLeft = game.jokersLimit;
+    game.jokerClicksInRound = 0;
+    
+    const select = document.getElementById('roundsSelect');
+    const mode = select ? select.value : '10';
+    if (mode === 'infinite') {
+      game.roundCount = Infinity;
+      game.roundsToPlay = shuffleArray([...allTeams]);
+    } else {
+      game.roundCount = parseInt(mode);
+      const shuffled = shuffleArray([...allTeams]);
+      game.roundsToPlay = shuffled.slice(0, game.roundCount);
+    }
+    
+    nextGameRound();
+  }
+}
+
+function updateTimerDisplay() {
+  const bar = document.getElementById('gameTimerBar');
+  const txt = document.getElementById('gameTimerText');
+  if (bar) {
+    const pct = (game.timeLeft / game.timeLimit) * 100;
+    bar.style.width = pct + '%';
+  }
+  if (txt) {
+    const mins = Math.floor(game.timeLeft / 60);
+    const secs = Math.floor(game.timeLeft % 60);
+    const ms = Math.floor((game.timeLeft % 1) * 10);
+    txt.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}.${ms}`;
+  }
 }
 
 function shuffleArray(array) {
@@ -3666,6 +3928,8 @@ function shuffleArray(array) {
 }
 
 function nextGameRound() {
+  if (game.mode === 'time') return;
+  
   if (game.currentRound >= game.roundCount) {
     endFlagGame();
     return;
@@ -3679,46 +3943,205 @@ function nextGameRound() {
   game.currentTeam = game.roundsToPlay[nextIndex];
   game.currentRound++;
   game.answered = false;
+  game.jokerClicksInRound = 0;
   
   renderGameScreen();
+}
+
+function useJoker() {
+  if (game.answered || game.jokersLeft <= 0) return;
+  
+  const input = document.getElementById('gameCountryInput');
+  if (!input) return;
+  
+  game.jokersLeft--;
+  game.jokerClicksInRound++;
+  
+  // Find correct name and get substring
+  const correctName = tn(game.currentTeam.name_en);
+  const hintText = correctName.slice(0, game.jokerClicksInRound);
+  
+  input.value = hintText;
+  input.focus();
+  input.setSelectionRange(hintText.length, hintText.length);
+  
+  // Update joker button label
+  const btn = document.getElementById('gameBtnJoker');
+  if (btn) {
+    btn.innerHTML = `💡 Joker (${game.jokersLeft})`;
+    if (game.jokersLeft <= 0) {
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+    }
+  }
+  
+  // Refresh suggestions list based on the new input value
+  handleGameInput(input);
 }
 
 function renderGameScreen() {
   const container = document.getElementById('viewFlagGame');
   if (!container || !game.currentTeam) return;
   
-  const roundLabel = game.roundCount === Infinity ? `Flagge ${game.currentRound}` : `Flagge ${game.currentRound} von ${game.roundCount}`;
-  
-  container.innerHTML = `
-    <div class="game-header-bar">
-      <div>🏁 ${roundLabel}</div>
-      <div>Score: <strong style="color:var(--accent-green)">${game.score}</strong> richtig &middot; Serie: <strong style="color:var(--accent-gold)">${game.streak}</strong></div>
-    </div>
+  if (game.mode === 'time') {
+    // Generiere 4 Optionen (1 korrekte, 3 falsche)
+    const otherTeams = Object.values(S.teams).filter(t => t.id !== game.currentTeam.id);
+    const shuffledOthers = shuffleArray([...otherTeams]);
+    const options = shuffleArray([game.currentTeam, ...shuffledOthers.slice(0, 3)]);
     
-    <div class="game-container">
-      <div class="game-flag-card" id="gameFlagCard">
-        <img class="game-flag-img" src="${game.currentTeam.flag}" alt="Rätsel Flagge" />
-        
-        <div class="game-input-container">
-          <input type="text" id="gameCountryInput" class="game-input" autocomplete="off" placeholder="Land eingeben (z. B. Deutschland, Mexiko...)" oninput="handleGameInput(this)" onkeydown="handleGameKeydown(event)" />
-          <div id="gameSuggestions" class="game-suggestions"></div>
+    let questionHtml = '';
+    let optionsHtml = '';
+    
+    if (game.questionType === 'find_flag') {
+      questionHtml = `
+        <p style="color:var(--text-secondary); font-size:0.75rem; text-transform:uppercase; font-weight:700; margin-bottom:0.5rem; letter-spacing:0.05em;">Welches Land hat diese Flagge?</p>
+        <h2 style="font-size: 1.8rem; font-weight: 900; margin-bottom: 1.5rem; background: linear-gradient(135deg, var(--accent-gold), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-align: center;">
+          ${tn(game.currentTeam.name_en)}
+        </h2>
+      `;
+      optionsHtml = `
+        <div class="flag-options-grid">
+          ${options.map(team => `
+            <div class="flag-option-card" onclick="selectFlagOption(this, '${team.id}')">
+              <img class="flag-option-img" src="${team.flag}" alt="Flagge" />
+            </div>
+          `).join('')}
         </div>
-        
-        <div id="gameFeedback" class="game-feedback"></div>
-        
-        <div class="game-actions">
-          <button class="game-btn-quit" onclick="quitFlagGame()">Abbrechen</button>
-          <button id="gameBtnCheck" class="game-btn-check" onclick="checkGameAnswer()">Prüfen</button>
-          <button id="gameBtnNext" class="game-btn-next" onclick="nextGameRound()">Weiter &#10142;</button>
+      `;
+    } else {
+      questionHtml = `
+        <p style="color:var(--text-secondary); font-size:0.75rem; text-transform:uppercase; font-weight:700; margin-bottom:0.75rem; letter-spacing:0.05em;">Zu welchem Land gehört diese Flagge?</p>
+        <img class="game-flag-img" src="${game.currentTeam.flag}" alt="Rätsel Flagge" style="max-width:320px; height:180px; object-fit:contain; margin-bottom:1.5rem; border-radius:var(--radius-md);" />
+      `;
+      optionsHtml = `
+        <div class="flag-options-grid" style="grid-template-columns: 1fr; gap: 0.75rem; max-width: 400px; width: 100%; margin: 0 auto;">
+          ${options.map(team => `
+            <button class="country-option-btn" onclick="selectFlagOption(this, '${team.id}')">
+              ${tn(team.name_en)}
+            </button>
+          `).join('')}
+        </div>
+      `;
+    }
+    
+    container.innerHTML = `
+      <div class="game-timer-container">
+        <div class="game-timer-bar" id="gameTimerBar" style="width: 100%"></div>
+      </div>
+      
+      <div class="game-header-bar" style="margin-bottom: 1rem;">
+        <div>🏁 Zeitmodus${game.suddenDeath ? ' 💀' : ''}: <span id="gameTimerText" style="font-family: monospace; font-size: 1.1rem; color: var(--accent-gold); font-weight: 700;"></span></div>
+        <div>Richtig: <strong style="color:var(--accent-green)" id="gameScoreText">${game.score}</strong></div>
+      </div>
+      
+      <div class="game-container">
+        <div class="game-flag-card" style="text-align: center;">
+          ${questionHtml}
+          ${optionsHtml}
+          
+          <div class="game-actions" style="margin-top: 1.5rem; width: 100%; display: flex; justify-content: center;">
+            <button class="game-btn-quit" onclick="quitFlagGame()" style="margin: 0;">Abbrechen</button>
+          </div>
         </div>
       </div>
-    </div>
-  `;
+    `;
+    
+    updateTimerDisplay();
+  } else {
+    const roundLabel = game.roundCount === Infinity ? `Flagge ${game.currentRound}` : `Flagge ${game.currentRound} von ${game.roundCount}`;
+    
+    const jokerBtnHtml = game.jokersLimit > 0 ? `
+      <button id="gameBtnJoker" class="game-btn-check" onclick="useJoker()" style="background:var(--accent-gold-dim); border-color:rgba(245,200,66,0.3); color:var(--accent-gold); margin-right:0.5rem;" ${game.jokersLeft <= 0 ? 'disabled style="opacity:0.5;"' : ''}>
+        💡 Joker (${game.jokersLeft})
+      </button>
+    ` : '';
+    
+    container.innerHTML = `
+      <div class="game-header-bar">
+        <div>🏁 ${roundLabel}${game.suddenDeath ? ' 💀' : ''}</div>
+        <div>Score: <strong style="color:var(--accent-green)">${game.score}</strong> richtig &middot; Serie: <strong style="color:var(--accent-gold)">${game.streak}</strong></div>
+      </div>
+      
+      <div class="game-container">
+        <div class="game-flag-card" id="gameFlagCard">
+          <img class="game-flag-img" src="${game.currentTeam.flag}" alt="Rätsel Flagge" />
+          
+          <div class="game-input-container">
+            <input type="text" id="gameCountryInput" class="game-input" autocomplete="off" placeholder="Land eingeben (z. B. Deutschland, Mexiko...)" oninput="handleGameInput(this)" onkeydown="handleGameKeydown(event)" />
+            <div id="gameSuggestions" class="game-suggestions"></div>
+          </div>
+          
+          <div id="gameFeedback" class="game-feedback"></div>
+          
+          <div class="game-actions">
+            <button class="game-btn-quit" onclick="quitFlagGame()">Abbrechen</button>
+            ${jokerBtnHtml}
+            <button id="gameBtnCheck" class="game-btn-check" onclick="checkGameAnswer()">Prüfen</button>
+            <button id="gameBtnNext" class="game-btn-next" onclick="nextGameRound()">Weiter &#10142;</button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    setTimeout(() => {
+      const input = document.getElementById('gameCountryInput');
+      if (input) input.focus();
+    }, 100);
+  }
+}
+
+function selectFlagOption(cardEl, selectedId) {
+  if (game.answered) return;
+  game.answered = true;
+  
+  const isButtonMode = game.questionType === 'find_country';
+  const selector = isButtonMode ? '.country-option-btn' : '.flag-option-card';
+  const options = document.querySelectorAll(selector);
+  options.forEach(o => o.classList.add('disabled'));
+  
+  const correctId = game.currentTeam.id;
+  const isCorrect = selectedId === correctId;
+  
+  if (isCorrect) {
+    game.score++;
+    cardEl.classList.add('correct-anim');
+    const scoreText = document.getElementById('gameScoreText');
+    if (scoreText) scoreText.textContent = game.score;
+  } else {
+    cardEl.classList.add('incorrect-anim');
+    options.forEach(o => {
+      if (o.getAttribute('onclick').includes(`'${correctId}'`)) {
+        o.classList.add('correct-anim');
+      }
+    });
+    
+    if (game.minusPoints) {
+      game.score = Math.max(0, game.score - 1);
+      const scoreText = document.getElementById('gameScoreText');
+      if (scoreText) scoreText.textContent = game.score;
+    }
+    
+    if (game.suddenDeath) {
+      setTimeout(() => {
+        endFlagGame(true);
+      }, 800);
+      return;
+    }
+  }
   
   setTimeout(() => {
-    const input = document.getElementById('gameCountryInput');
-    if (input) input.focus();
-  }, 100);
+    if (game.active && game.mode === 'time') {
+      game.currentRound++;
+      const allTeams = Object.values(S.teams);
+      if (game.currentRound >= game.roundsToPlay.length) {
+        game.roundsToPlay = shuffleArray([...allTeams]);
+        game.currentRound = 0;
+      }
+      game.currentTeam = game.roundsToPlay[game.currentRound];
+      game.answered = false;
+      renderGameScreen();
+    }
+  }, 600);
 }
 
 function handleGameInput(inputEl) {
@@ -3890,6 +4313,8 @@ function checkGameAnswer() {
   const feedback = document.getElementById('gameFeedback');
   const btnCheck = document.getElementById('gameBtnCheck');
   const btnNext = document.getElementById('gameBtnNext');
+  const btnJoker = document.getElementById('gameBtnJoker');
+  if (btnJoker) btnJoker.disabled = true;
   
   const cleanVal = value.toLowerCase();
   const correctDe = tn(game.currentTeam.name_en).toLowerCase();
@@ -3938,6 +4363,15 @@ function checkGameAnswer() {
       feedback.textContent = `Leider falsch! 😢 Richtig war: ${tn(game.currentTeam.name_en)}`;
       feedback.className = 'game-feedback show incorrect';
     }
+    
+    if (game.suddenDeath) {
+      if (btnCheck) btnCheck.style.display = 'none';
+      if (btnNext) btnNext.style.display = 'none';
+      setTimeout(() => {
+        endFlagGame(true);
+      }, 1500);
+      return;
+    }
   }
   
   if (btnCheck) btnCheck.style.display = 'none';
@@ -3949,61 +4383,139 @@ function checkGameAnswer() {
 
 function quitFlagGame() {
   if (confirm("Möchtest du das Spiel wirklich abbrechen? Dein Fortschritt in dieser Runde geht verloren.")) {
+    if (game.timerInterval) clearInterval(game.timerInterval);
     game.active = false;
     renderGameSetup();
   }
 }
 
-function endFlagGame() {
+function endFlagGame(isSuddenDeath = false) {
+  if (game.timerInterval) clearInterval(game.timerInterval);
   game.active = false;
+  
   const container = document.getElementById('viewFlagGame');
   if (!container) return;
   
-  const scoreRatio = game.score / game.roundCount;
-  let rank = '';
-  let emblem = '';
-  
-  if (scoreRatio === 1) {
-    rank = 'Flaggen-Weltmeister';
-    emblem = '🏆';
-  } else if (scoreRatio >= 0.8) {
-    rank = 'Taktischer Analyst';
-    emblem = '🥇';
-  } else if (scoreRatio >= 0.5) {
-    rank = 'Fan-Kurven-Mitläufer';
-    emblem = '🥈';
-  } else {
-    rank = 'Ersatzbank-Drücker';
-    emblem = '🥉';
+  if (isSuddenDeath) {
+    container.innerHTML = `
+      <div class="status-bar">
+        <div class="status-live"><span class="live-dot" style="background:var(--accent-red)"></span><span>💀 Hardcore-Modus &middot; Sudden Death K.O.</span></div>
+      </div>
+      <div class="certificate-card" style="border-color: var(--accent-red); box-shadow: 0 0 24px rgba(239, 68, 68, 0.25);">
+        <div class="certificate-emblem">💀</div>
+        <h2 class="certificate-title">Game Over</h2>
+        <p class="certificate-subtitle" style="color: var(--accent-red); font-weight: 800; letter-spacing:0.05em;">SUDDEN DEATH ELIMINIERUNG</p>
+        
+        <div style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 2rem; position: relative; z-index: 10;">
+          Du hast eine falsche Antwort gegeben und wurdest im Hardcore-Modus eliminiert!
+        </div>
+        
+        <div class="certificate-rank" style="position: relative; z-index: 10;">
+          Rang: <span style="color: var(--accent-red)">Ersatzbank-Drücker</span>
+        </div>
+        <div class="certificate-score" style="position: relative; z-index: 10;">
+          Ergebnis: <strong>${game.score}</strong> richtige Antworten vor dem K.O.
+        </div>
+        
+        <button class="game-btn" onclick="renderGameSetup()" style="position: relative; z-index: 10; background: var(--accent-red-dim); border-color: rgba(239, 68, 68, 0.3); color: var(--accent-red);">Nochmal versuchen</button>
+      </div>
+    `;
+    return;
   }
   
-  container.innerHTML = `
-    <div class="status-bar">
-      <div class="status-live"><span class="live-dot" style="background:var(--accent-gold)"></span><span>🏁 Spiel beendet &middot; Deine Ergebnisse</span></div>
-    </div>
-    <div class="certificate-card">
-      <canvas id="confettiCanvas"></canvas>
-      <div class="certificate-emblem">${emblem}</div>
-      <h2 class="certificate-title">Urkunde</h2>
-      <p class="certificate-subtitle">FIFA WM 2026 FLAGGEN-RATEN</p>
-      
-      <div style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 2rem; position: relative; z-index: 10;">
-        Hiermit wird bescheinigt, dass du die Raterunde erfolgreich absolviert hast.
+  if (game.mode === 'time') {
+    const correctPerMin = Math.round((game.score / game.timeLimit) * 60 * 10) / 10;
+    let rank = '';
+    let emblem = '';
+    
+    if (correctPerMin >= 30) {
+      rank = 'Flaggen-Flitzer (Überschall)';
+      emblem = '🚀';
+    } else if (correctPerMin >= 20) {
+      rank = 'Flaggen-Profi (Schnelldenker)';
+      emblem = '⚡';
+    } else if (correctPerMin >= 10) {
+      rank = 'Flaggen-Kenner';
+      emblem = '🏃';
+    } else {
+      rank = 'Flaggen-Schnecke';
+      emblem = '🐌';
+    }
+    
+    container.innerHTML = `
+      <div class="status-bar">
+        <div class="status-live"><span class="live-dot" style="background:var(--accent-gold)"></span><span>🏁 Spiel beendet &middot; Deine Ergebnisse</span></div>
       </div>
-      
-      <div class="certificate-rank" style="position: relative; z-index: 10;">
-        Rang: <span style="color: var(--accent-gold)">${rank}</span>
+      <div class="certificate-card">
+        <canvas id="confettiCanvas"></canvas>
+        <div class="certificate-emblem">${emblem}</div>
+        <h2 class="certificate-title">Urkunde</h2>
+        <p class="certificate-subtitle">FIFA WM 2026 FLAGGEN-ZEITMODUS</p>
+        
+        <div style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 2rem; position: relative; z-index: 10;">
+          Hiermit wird bescheinigt, dass du den Zeitmodus erfolgreich absolviert hast.
+        </div>
+        
+        <div class="certificate-rank" style="position: relative; z-index: 10;">
+          Rang: <span style="color: var(--accent-gold)">${rank}</span>
+        </div>
+        <div class="certificate-score" style="position: relative; z-index: 10;">
+          Ergebnis: <strong>${game.score}</strong> richtige Flaggen in <strong>${game.timeLimit}</strong> Sekunden!<br>
+          <span style="font-size:0.9rem;color:var(--text-muted);margin-top:0.4rem;display:inline-block;">Geschwindigkeit: <strong>${correctPerMin}</strong> Flaggen/Min</span>
+        </div>
+        
+        <button class="game-btn" onclick="renderGameSetup()" style="position: relative; z-index: 10;">Nochmal spielen</button>
       </div>
-      <div class="certificate-score" style="position: relative; z-index: 10;">
-        Ergebnis: <strong>${game.score}</strong> von <strong>${game.roundCount}</strong> Flaggen richtig erkannt (${Math.round(scoreRatio * 100)}%).
-      </div>
-      
-      <button class="game-btn" onclick="renderGameSetup()" style="position: relative; z-index: 10;">Nochmal spielen</button>
-    </div>
-  `;
-  
-  if (scoreRatio >= 0.5) {
+    `;
+    
     setTimeout(startConfetti, 100);
+  } else {
+    const scoreRatio = game.score / game.roundCount;
+    let rank = '';
+    let emblem = '';
+    
+    if (scoreRatio === 1) {
+      rank = 'Flaggen-Weltmeister';
+      emblem = '🏆';
+    } else if (scoreRatio >= 0.8) {
+      rank = 'Taktischer Analyst';
+      emblem = '🥇';
+    } else if (scoreRatio >= 0.5) {
+      rank = 'Fan-Kurven-Mitläufer';
+      emblem = '🥈';
+    } else {
+      rank = 'Ersatzbank-Drücker';
+      emblem = '🥉';
+    }
+    
+    container.innerHTML = `
+      <div class="status-bar">
+        <div class="status-live"><span class="live-dot" style="background:var(--accent-gold)"></span><span>🏁 Spiel beendet &middot; Deine Ergebnisse</span></div>
+      </div>
+      <div class="certificate-card">
+        <canvas id="confettiCanvas"></canvas>
+        <div class="certificate-emblem">${emblem}</div>
+        <h2 class="certificate-title">Urkunde</h2>
+        <p class="certificate-subtitle">FIFA WM 2026 FLAGGEN-RATEN</p>
+        
+        <div style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 2rem; position: relative; z-index: 10;">
+          Hiermit wird bescheinigt, dass du die Raterunde erfolgreich absolviert hast.
+        </div>
+        
+        <div class="certificate-rank" style="position: relative; z-index: 10;">
+          Rang: <span style="color: var(--accent-gold)">${rank}</span>
+        </div>
+        <div class="certificate-score" style="position: relative; z-index: 10;">
+          Ergebnis: <strong>${game.score}</strong> von <strong>${game.roundCount}</strong> Flaggen richtig erkannt (${Math.round(scoreRatio * 100)}%).
+        </div>
+        
+        <button class="game-btn" onclick="renderGameSetup()" style="position: relative; z-index: 10;">Nochmal spielen</button>
+      </div>
+    `;
+    
+    if (scoreRatio >= 0.5) {
+      setTimeout(startConfetti, 100);
+    }
   }
 }
 
@@ -4059,6 +4571,8 @@ function startConfetti() {
   window.currentConfettiAnimation = animationId;
 }
 
+const savedTab = localStorage.getItem('activeTab') || 'germany';
+switchTab(savedTab);
 loadAllData();
 </script>
 </body>
